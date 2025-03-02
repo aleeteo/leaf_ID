@@ -9,7 +9,7 @@ function labeledImage = label_regions(BW, im)
     labeledImage = zeros(size(BW)); % Matrice per le etichette
 
     % Crea una figura per visualizzare l'overlay
-    figure, imshow(im);
+    figure(77), imshow(im);
     hold on;
     
     % Sovrapposizione della maschera con trasparenza
@@ -40,9 +40,11 @@ function labeledImage = label_regions(BW, im)
         labeledImage(CC.PixelIdxList{i}) = labels(i);
     end
 
-    % Visualizza l'immagine etichettata
-    figure, imagesc(labeledImage);
-    colormap(jet);
-    colorbar;
-    title('Immagine etichettata');
+    close(77); %chiudo la finestra di visualizzazione
+
+    % % Visualizza l'immagine etichettata
+    % figure, imagesc(labeledImage);
+    % colormap(jet);
+    % colorbar;
+    % title('Immagine etichettata');
 end
