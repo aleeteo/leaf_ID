@@ -1,17 +1,15 @@
-function hu = compute_hu_moments(mask, varargin)
+function hu = compute_hu_moments(mask, image, max_order)
     % COMPUTE_HU_MOMENTS Calcola i momenti di Hu di un'immagine o maschera.
-    % 
+    %
     % USO:
     %   hu = compute_hu_moments(mask)
     %   hu = compute_hu_moments(mask, image)
-    %   hu = compute_hu_moments(mask, image, 'max_order', N)
+    %   hu = compute_hu_moments(mask, image, max_order)
     %
     % INPUT:
     %   - mask:      Matrice binaria che definisce la regione di interesse (obbligatorio).
     %   - image:     Immagine originale (opzionale, default = []).
-    %
-    % PARAMETRI OPZIONALI (Name-Value Pairs):
-    %   - 'max_order': Numero massimo di momenti di Hu da calcolare (default = 7).
+    %   - max_order: Numero massimo di momenti di Hu da calcolare (opzionale, default = 7).
     %
     % OUTPUT:
     %   - hu: Vettore contenente i momenti di Hu fino a max_order.
@@ -19,40 +17,33 @@ function hu = compute_hu_moments(mask, varargin)
     % ESEMPIO:
     %   mask = imread('mask.png'); 
     %   image = imread('image.png'); 
-    %   hu = compute_hu_moments(mask, image, 'max_order', 5);
-    
-    % Parser per gli input
-    p = inputParser;
-    addRequired(p, 'mask', @(x) (isnumeric(x) || islogical(x)) && ismatrix(x));
-    addOptional(p, 'image', [], @(x) isnumeric(x) && (ismatrix(x) || ndims(x) == 3));
-    addParameter(p, 'max_order', 7, @(x) isnumeric(x) && isscalar(x) && x >= 1 && x <= 7);
-    parse(p, mask, varargin{:});
-    
-    mask = double(p.Results.mask);
-    image = p.Results.image;
-    max_order = p.Results.max_order;
-    
+    %   hu = compute_hu_moments(mask, image, 5);
+
+    % arguments invece di inputParser per migliorare integrazione con matlab
+    arguments
+        mask (:,:) double
+        image (:,:,:) double = []
+        max_order (1,1) double {mustBeInteger, mustBePositive, ...
+                                mustBeLessThanOrEqual(max_order, 7)} = 7
+    end
+
     % Se è presente l'immagine applica la maschera
     if ~isempty(image)
-        % Se l'immagine è a colori convertila in scala di grigi
-        if size(image, 3) ~= 1 
+        if size(image, 3) ~= 1
             image = rgb2gray(image);
         end
-        % Converto in double e applico la maschera
         img = double(image) .* mask;
     else
-        % Se non viene fornita un'immagine, uso solo la maschera
         img = mask;
     end
-    
+
     % Ottieni la dimensione dell'immagine
     [rows, cols] = size(img);
     [X, Y] = meshgrid(1:cols, 1:rows);
 
     % Calcola i momenti spaziali
-    m00 = sum(img(:)); % Momento di ordine zero (area o intensità totale)
+    m00 = sum(img(:));
     if m00 == 0
-        % Gestione del caso degenere (evita divisioni per zero)
         hu = zeros(1, max_order);
         return;
     end
@@ -67,7 +58,7 @@ function hu = compute_hu_moments(mask, varargin)
     mu20 = sum(sum(((X - xc).^2) .* img));
     mu02 = sum(sum(((Y - yc).^2) .* img));
     mu11 = sum(sum(((X - xc) .* (Y - yc)) .* img));
-    
+
     if max_order >= 3
         mu30 = sum(sum(((X - xc).^3) .* img));
         mu03 = sum(sum(((Y - yc).^3) .* img));
@@ -75,11 +66,11 @@ function hu = compute_hu_moments(mask, varargin)
         mu12 = sum(sum(((X - xc) .* (Y - yc).^2) .* img));
     end
 
-    % Calcola i momenti centrali normalizzati per l'invarianza rispetto alla scala
+    % Calcola i momenti centrali normalizzati
     eta20 = mu20 / m00^2;
     eta02 = mu02 / m00^2;
     eta11 = mu11 / m00^2;
-    
+
     if max_order >= 3
         eta30 = mu30 / m00^(2.5);
         eta03 = mu03 / m00^(2.5);
