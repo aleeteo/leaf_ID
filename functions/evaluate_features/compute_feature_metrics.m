@@ -1,4 +1,4 @@
-function [metrics] = compute_feature_metrics(data, features_name)
+function [metrics] = compute_feature_metrics(data, feature_names)
   % genera una tabella contenente varie metriche di misurazione della bonta'
   % e normalizza le metriche  
   % delle features estratte da un dataset
@@ -9,7 +9,7 @@ function [metrics] = compute_feature_metrics(data, features_name)
   labels = data(:,1);
   features = data(:, 2:end);
   n_features = size(features, 2);
-  features_name = features_name(2:end)';
+  feature_names = feature_names(2:end)';
 
   fisher_score = zeros(n_features, 1);
   avg_bhattacharyya = zeros(n_features, 1);
@@ -24,6 +24,6 @@ function [metrics] = compute_feature_metrics(data, features_name)
   norm_fisher_score = fisher_score ./ max(fisher_score);
   norm_avg_bhattacharyya = avg_bhattacharyya ./ max(avg_bhattacharyya);
 
-  metrics = table(features_name, fisher_score, avg_bhattacharyya, norm_fisher_score, norm_avg_bhattacharyya, ...
+  metrics = table(feature_names, fisher_score, avg_bhattacharyya, norm_fisher_score, norm_avg_bhattacharyya, ...
     'VariableNames', {'Feature', 'Fisher', 'Bhattacharyya', 'norm_fisher', 'norm_bhat'});
 end

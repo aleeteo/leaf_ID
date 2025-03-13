@@ -1,7 +1,19 @@
-function cm = compute_correlation_matrix(data, feature_names)
-  % data: matrice numerica (prima colonna = labels, altre colonne = features)
-  % feature_names: arraycell contenente i nomi delle features
+function cm = compute_correlation_matrix(data, feature_names, show)
+  % funzione per la visualizzazione della matrice di correlazione
+  % input: 
+  %   - data: matrice numerica (prima colonna = labels, altre colonne = features)
+  %   - feature_names: (opzionale) cell array contenente i nomi delle features
+  %   - show: (opzionale) booleano che indica se visualizzare la matrice di correlazione
+  % output:
+  %   - cm: matrice di correlazione
   
+  arguments
+    data (:,:) double
+    feature_names {mustBeCell} = {}
+    show (1,1) logical = false
+  end
+
+
   % Estrarre solo le features (escludendo la colonna delle labels)
   features = data(:, 2:end);
   feature_names = feature_names(2:end)';
@@ -9,13 +21,13 @@ function cm = compute_correlation_matrix(data, feature_names)
   % Calcolare la matrice di correlazione
   cm = corrcoef(features);
 
-
-  % disp("dimensioni cm")
-  % disp(size(cm));
-  % disp("dimensioni nomi features");
-  % disp(size(feature_names));
-  
-  % Visualizzare la matrice di correlazione con i nomi delle features
-  fprintf('Matrice di correlazione:\n');
-  disp(array2table(cm, 'VariableNames', feature_names, 'RowNames', feature_names));
+  if (show == true)
+    if length(feature_names) ~= length(cm, 'rows')
+      disp(cm)
+    else
+      % Visualizzare la matrice di correlazione con i nomi delle features
+      fprintf('Matrice di correlazione:\n');
+      disp(array2table(cm, 'VariableNames', feature_names, 'RowNames', feature_names));
+    end
+  end
 end

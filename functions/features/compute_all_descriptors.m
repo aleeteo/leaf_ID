@@ -61,5 +61,7 @@ function [data, feature_names] = compute_all_descriptors()
     % Assegnazione diretta alla matrice dei dati
     data(i, 2:end) = [shape_features , texture_features, color_features, edge_features];
   end
+
+  data = normalize_features(data);
 end
 
