@@ -9,10 +9,9 @@ function cm = compute_correlation_matrix(data, feature_names, show)
   
   arguments
     data (:,:) double
-    feature_names {mustBeCell} = {}
+    feature_names cell = {}
     show (1,1) logical = false
   end
-
 
   % Estrarre solo le features (escludendo la colonna delle labels)
   features = data(:, 2:end);
