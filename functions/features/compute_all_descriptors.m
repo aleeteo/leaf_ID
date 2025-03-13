@@ -24,7 +24,7 @@ function [data, feature_names] = compute_all_descriptors()
   [~, edge_names] = compute_edge_descriptors(mask);
   
   nfeatures = length(shape_names) + length(texture_names) + ...
-              length(color_names), length(edge_names);
+              length(color_names)+ length(edge_names);
   
   % Preallocazione della matrice data (nimages x (nfeatures + 1))
   data = zeros(nimages, nfeatures + 1);
