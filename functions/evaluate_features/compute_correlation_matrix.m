@@ -16,7 +16,6 @@ function cm = compute_correlation_matrix(data, feature_names, show)
 
   % Estrarre solo le features (escludendo la colonna delle labels)
   features = data(:, 2:end);
-  feature_names = feature_names(2:end)';
   
   % Calcolare la matrice di correlazione
   cm = corrcoef(features);
@@ -26,6 +25,7 @@ function cm = compute_correlation_matrix(data, feature_names, show)
       disp(cm)
     else
       % Visualizzare la matrice di correlazione con i nomi delle features
+      feature_names = feature_names(2:end)';
       fprintf('Matrice di correlazione:\n');
       disp(array2table(cm, 'VariableNames', feature_names, 'RowNames', feature_names));
     end
