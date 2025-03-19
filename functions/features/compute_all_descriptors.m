@@ -10,7 +10,7 @@ function [data, feature_names] = compute_all_descriptors()
   % - Preallocazione
 
   % Lettura dei file
-  [images, masks, labels] = readlists();
+  [images, masks, labels] = readlists_train();
   nimages = numel(images);
   
   % Lettura della prima immagine per determinare il numero di feature
