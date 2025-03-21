@@ -16,5 +16,9 @@ function [features, feature_names] = compute_texture_descriptors(img, mask)
   avg_edge = compute_avg_edge(img, mask);
 
   features = [glcm_features, avg_edge, stat_features];
-  feature_names = [glcm_feature_names, {'avg_edge'}, stats_feature_names];
+
+  % controllo sul numero di output
+  if nargout > 1 
+    feature_names = [glcm_feature_names, {'avg_edge'}, stats_feature_names];
+  end
 end

@@ -1,22 +1,21 @@
-function [data, minmax] = extract_training_data(saveFlag)
+function data = extract_test_data(saveFlag)
   % Funzione per l'estrazione e il salvataggio dei descrittori di forma e texture
   % Input: save (opzionale) - se true, salva i dati in un file .mat
   % Output: 
   %   data - table contenente le features per ogni immagine (labels comprese)
   %          e nomi delle features
-  %   minmax - valori minimi e massimi per la normalizzazione delle feature
   
   arguments
     saveFlag {mustBeNumericOrLogical} = false
   end
 
   % Lettura dei file
-  [images, masks, labels] = readlists_train();
+  [images, masks, labels] = readlists_test();
   nimages = numel(images);
 
   % Ottenere i nomi delle feature dalla prima immagine
-  img = imread(images{1});
-  mask = imread(masks{1});
+    img = imread(['dataset/02_test/images/' images{1}]);
+    mask = imread(['dataset/02_test/masks/' masks{1}]);
   [~, feature_names] = compute_descriptors(img, mask, labels(1));
 
   % Creazione di una table vuota con colonne predefinite
@@ -27,20 +26,16 @@ function [data, minmax] = extract_training_data(saveFlag)
 
   % Estrazione delle feature per ogni immagine
   for i = 1:nimages
-    img = imread(images{i});
-    mask = imread(masks{i});
+    img = imread(['dataset/02_test/images/' images{i}]);
+    mask = imread(['dataset/02_test/masks/' masks{i}]);
     data(i, :) = compute_descriptors(img, mask, labels(i));
   end
 
   % Normalizzazione delle feature 
-  if nargout == 2
-    [data, minmax] = normalize_features(data);
-  else
-    data = normalize_features(data);
-  end
+  load('data/minmax.mat', 'minmax');
+  data = normalize_features(data, minmax);
 
   if saveFlag
-    save('data/training_data.mat', 'data');
-    save('data/minmax.mat', 'minmax');
+    save('data/testing_data.mat', 'data');
   end
 end
