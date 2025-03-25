@@ -1,10 +1,10 @@
-function [images, masks, labels] = readlists()
+function [images, masks, labels] = readlists_train()
   f = fopen('dataset/01_train/images.list');
   z = textscan(f,'%s');
   fclose(f);
   images = z{:}; 
 
-  f = fopen('dataset/01_train/labels_general.list');
+  f = fopen('dataset/01_train/labelsNumeric.list');
   l = textscan(f,'%s');
   labels = l{:};
   fclose(f);
