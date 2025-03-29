@@ -17,3 +17,5 @@ fprintf('F1 Score: %f\n', f1_score);
 fprintf('Confusion Matrix:\n');
 fprintf('%d ', confusion_matrix);
 confusionchart(abs(confusion_matrix));
+
+save('data/trainedKnnMdl.mat', 'C');
