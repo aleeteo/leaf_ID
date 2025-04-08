@@ -1,10 +1,11 @@
-function [train_selected, test_selected, selected_features] = select_top_features(train_data, test_data, n)
+function [train_selected, test_selected, selected_features, idx] = select_top_features(train_data, test_data, n)
     % Controlla che 'Label' sia presente in entrambe le tabelle
     if ~any(strcmp(train_data.Properties.VariableNames, 'Label')) || ...
        ~any(strcmp(test_data.Properties.VariableNames, 'Label'))
         error('La colonna "Label" deve essere presente in entrambe le tabelle.');
     end
 
+  % %TODO: restituire indici features selezionaate
     % Seleziona solo colonne numeriche (eccetto Label)
     feature_vars = varfun(@isnumeric, train_data, 'OutputFormat', 'uniform');
     feature_names = train_data.Properties.VariableNames(feature_vars & ~strcmp(train_data.Properties.VariableNames, 'Label'));
