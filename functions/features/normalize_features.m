@@ -9,7 +9,6 @@ function [normData, minmax] = normalize_features(data, minmax, hasLabels)
   %controlli sugli argomenti
   arguments
     data table
-    % minmax (2,:) table {mustBeNumeric} = []
     minmax (2, :) table = []
     hasLabels logical = true
   end
@@ -18,7 +17,7 @@ function [normData, minmax] = normalize_features(data, minmax, hasLabels)
     error('Il numero di colonne di minmax deve essere uguale al numero di colonne di data - 1');
   end
   
-  if hesLabels
+  if hasLabels
     % Estrarre solo le features (escludendo la colonna delle labels)
     features = data(:, 2:end);
   else

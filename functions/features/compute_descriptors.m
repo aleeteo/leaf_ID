@@ -7,6 +7,12 @@ function [descriptor_row, feature_names] = compute_descriptors(img, mask, label)
   % Output:
   %   - descriptor_row: riga di una table con label e descrittori
   %   - feature_names: opzionale, cell array con i nomi dei descrittori
+  %
+  arguments
+    img (:, :, :)
+    mask (:, :)
+    label char = 'undefined'
+  end
 
   % Pre-elaborazione immagine (correzione gamma su canale L*)
   labImg = rgb2lab(im2double(img));
@@ -15,6 +21,9 @@ function [descriptor_row, feature_names] = compute_descriptors(img, mask, label)
   img_preprocessed = uint8(lab2rgb(labImg) * 255);
   
   % Conversione dell'etichetta in formato categoriale
+  if ~iscell(label)
+      label = {label}; % lo converte in cella se non lo è già
+  end
   label = categorical(label);
 
   % Estrazione delle feature
