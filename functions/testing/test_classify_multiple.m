@@ -17,7 +17,8 @@ l = textscan(f,'%s');
 labels = l{:};
 fclose(f);
 
-% clear z m l f
+clear z m l f
+
 for i = 1:numel(images)
   img = imread(images{i});
   mask = imread(masks{i});
@@ -29,6 +30,9 @@ for i = 1:numel(images)
   figure;
   subplot(1,2,1), imagesc(pred);
   subplot(1,2,2), confusionchart(abs(confmat), 'RowSummary', 'row-normalized', 'ColumnSummary', 'column-normalized'), title('Confusion Matrix');
-  % confusionchart(abs(confmat));
 
+  correct = sum((label(:) == pred(:)) & (pred(:) ~= 0));
+  total = sum(pred(:) ~= 0);
+  accuracy = correct / total;
+  disp(['Accuracy: ', num2str(accuracy)]);
 end
