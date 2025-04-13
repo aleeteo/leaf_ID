@@ -1,6 +1,8 @@
-function totAccuracy = test_classify_multiple_cl(C, visualize)
+function totAccuracy = test_classify_multiple_cl(C, minmax, visualize)
   arguments
     C 
+    % minmax (:, 2) table = []
+    minmax table = table();
     visualize logical = false
   end
 
@@ -26,7 +28,11 @@ function totAccuracy = test_classify_multiple_cl(C, visualize)
     mask = imread(masks{i});
     label = load(labels{i}).labeledImage;
     
-    pred = classify_multiple_cl(img, mask, C);
+    if size(minmax, 1) == 0
+      pred = classify_multiple_cl(img, mask, C);
+    else
+      pred = classify_multiple_cl(img, mask, C, minmax);
+    end
 
     if visualize
       confmat = confusionmat(label(:), pred(:));

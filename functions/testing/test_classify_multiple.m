@@ -32,7 +32,7 @@ for i = 1:numel(images)
   subplot(1,2,2), confusionchart(abs(confmat), 'RowSummary', 'row-normalized', 'ColumnSummary', 'column-normalized'), title('Confusion Matrix');
 
   correct = sum((label(:) == pred(:)) & (pred(:) ~= 0));
-  total = sum(pred(:) ~= 0);
+  total = nnz(pred(:) ~= 0);
   accuracy = correct / total;
   disp(['Accuracy: ', num2str(accuracy)]);
 end
