@@ -1,9 +1,6 @@
-function pred = classify_multiple(img, mask)
+function pred = classify_multiple(img, mask, C, minmax)
   [comps, num_labels] = bwlabel(mask);
   pred = zeros(size(mask));
-
-  load('data/minmax.mat', 'minmax');
-  load('data/trainedKnnMdl.mat', 'C'); % assume che C.ModelParameters.PredictorNames esista
 
   predictor_names = C.PredictorNames; % <- 25 nomi di feature
 
