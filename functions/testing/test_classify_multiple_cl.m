@@ -42,7 +42,7 @@ function totAccuracy = test_classify_multiple_cl(C, minmax, visualize)
     end
 
     correct = sum((label(:) == pred(:)) & (pred(:) ~= 0));
-    total = sum(pred(:) ~= 0);
+    total = nnz(pred(:) ~= 0);
     accuracy = correct / total;
     totAccuracy = totAccuracy + accuracy;
     disp(['Accuracy: ', num2str(accuracy)]);
