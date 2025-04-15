@@ -20,39 +20,30 @@ fclose(f);
 [rows, cols, ch] = size(imread(images{1}));
 
 % prealloca la struct
-labels = ["classe 1", "classe 2", "classe 3", "classe 4", "classe 5", ...
-             "classe 6", "classe 7", "classe 8", "classe 9", "classe 10"];
+labels = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
 
 template = struct('label', categorical("", labels), ...
                   'masks', [], ...
                   'image', []);
 
-classes_train = repmat(template, 1, 10);
-classes_test = repmat(template, 1, 10);
+classes = repmat(template, 1, 10);
 
 
 for i = 1:10
   %caricamento della maschera di classi
   class_mask = imread(masks{i});
-  classes_train(i).label = categorical(labels(i), labels);
-  classes_test(i).label  = categorical(labels(i), labels);
-  classes_train(i).image = imread(images{i});
-  classes_test(i).image = imread(images{i});
+  classes(i).label = categorical(labels(i), labels);
+  classes(i).image = imread(images{i});
   [components, num] = bwlabel(class_mask);
   
   % estrazione dei soli primi 10 elementi della maschera
-  for j = 1:10
+  for j = 1:num
     mask = components == j;
-    classes_train(i).masks{j} = mask;
-  end
-  %estrazione degli ultimi 5 elementi della maschera
-  for j = 11:num
-    mask = components == j;
-    classes_train(i).masks{j-10} = mask;
+    classes(i).masks{j} = mask;
   end
 end
 
 % salvo la struct
-save('dataset/03_classes/mask_structs.mat', 'classes_train', 'classes_test');
+save("data/classes_structs.mat", "classes");
 
 clear
