@@ -1,19 +1,31 @@
-function acc = test_classify_multiple(C, minmax)
+function acc = test_classify_multiple(C, minmax, images, masks, labels)
+  arguments
+    C
+    minmax
+    images cell
+    masks cell
+    labels cell
+  end
 
-  f = fopen('dataset/03_classes/images.list');
-  z = textscan(f,'%s');
-  fclose(f);
-  images = z{:}; 
-
-  f = fopen('dataset/03_classes/masks.list');
-  m = textscan(f,'%s');
-  masks = m{:};
-  fclose(f);
-
-  f = fopen('dataset/03_classes/labels.list');
-  l = textscan(f,'%s');
-  labels = l{:};
-  fclose(f);
+  % default su directory delle classi se le liste non sono fornite
+  if isempty(images)
+    f = fopen('dataset/03_classes/images.list');
+    z = textscan(f,'%s');
+    fclose(f);
+    images = z{:}; 
+  end
+  if isempty(masks)
+    f = fopen('dataset/03_classes/masks.list');
+    z = textscan(f,'%s');
+    fclose(f);
+    masks = z{:}; 
+  end
+  if isempty(labels)
+    f = fopen('dataset/03_classes/labels.list');
+    z = textscan(f,'%s');
+    fclose(f);
+    labels = z{:}; 
+  end
 
   clear z m l f
   acc = 0;
