@@ -9,7 +9,7 @@ function accuracy_segmentation(folder1, folder2)
     end
 
     total_accuracy = 0;
-    num_files = length(files1);q
+    num_files = length(files1);
 
     fprintf('Confronto %d maschere...\n', num_files);
 
