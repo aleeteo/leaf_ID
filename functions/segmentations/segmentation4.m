@@ -17,7 +17,7 @@ function mask = segmentation4(img)
     seed_color = [a(1,1), b(1,1)];
 
     % Parametro soglia per similarità cromatica
-    threshold = 10;
+    threshold = 8;
 
     % Inizializzazione maschere
     [rows, cols] = size(a);

@@ -1,3 +1,4 @@
+%segmentazione strana
 function mask = segmentation2(img)
     % Verifica se è RGB
     if size(img, 3) ~= 3

@@ -46,7 +46,7 @@ function tester(inputFolder, outputFolder)
         img = imread(imagePath);
 
         % Applica la funzione di segmentazione (assumendo che segmentation2 restituisca la maschera)
-        binaryImage = segmentation4(img);  % Restituisce la maschera
+        binaryImage = segmentation5(img);  % Restituisce la maschera
 
         % Salva l'immagine binaria (la maschera)
         imwrite(binaryImage, outputFileName);
