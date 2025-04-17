@@ -1,10 +1,11 @@
-function acc = test_classify_multiple(C, minmax, images, masks, labels)
+function acc = test_classify_multiple(C, minmax, visualize, images, masks, labels)
   arguments
     C
     minmax
-    images cell
-    masks cell
-    labels cell
+    visualize logical = false
+    images cell = cell()
+    masks cell = cell()
+    labels cell = cell()
   end
 
   % default su directory delle classi se le liste non sono fornite
@@ -38,9 +39,13 @@ function acc = test_classify_multiple(C, minmax, images, masks, labels)
     pred = classify_multiple(img, mask, C, minmax);
 
     confmat = confusionmat(label(:), pred(:));
-    figure;
-    subplot(1,2,1), imagesc(pred);
-    subplot(1,2,2), confusionchart(abs(confmat), 'RowSummary', 'row-normalized', 'ColumnSummary', 'column-normalized'), title('Confusion Matrix');
+    if visualize
+      figure;
+      subplot(1,2,1), imagesc(pred);
+      subplot(1,2,2), imagesc(label);
+      figure;
+      confusionchart(abs(confmat), 'RowSummary', 'row-normalized', 'ColumnSummary', 'column-normalized'), title('Confusion Matrix');
+    end
 
     correct = sum((label(:) == pred(:)) & (pred(:) ~= 0));
     total = nnz(pred(:) ~= 0);
