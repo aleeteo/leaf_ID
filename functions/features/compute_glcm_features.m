@@ -1,8 +1,10 @@
 function [features, feature_names] = compute_glcm_features(img)
-  % funzione che calcola le features di GLCM
-  % input: img = immagine in scala di grigi o non 
-  % output: features = vettore con le features di GLCM
-  %         feature_names = vettore con i nomi delle features di GLCM
+  % Funzione per il calcolo delle caratteristiche (features) basate sulla matrice di co-occorrenza dei livelli di grigio (GLCM).
+  % Input: 
+  %   - img: immagine in scala di grigi o immagine a colori (che verrà convertita in scala di grigi).
+  % Output: 
+  %   - features: vettore contenente le caratteristiche calcolate dalla GLCM.
+  %   - feature_names: vettore contenente i nomi delle caratteristiche calcolate dalla GLCM.
 
   % Controllo input
   if nargin < 1
@@ -10,12 +12,11 @@ function [features, feature_names] = compute_glcm_features(img)
   end
 
   % Calcolo della matrice di co-occorrenza (GLCM)
-  offsets = [0 1; -1 1; -1 0; -1 -1]; % Offset per invarianza a rotazione
-
-  % TODO: testare metriche di valutazione con opzioni deverse 
-  % (symmetric = false, graylimits = [masked_img min(masked_img(:)) max(masked_img(:))])
-
-  glcm = graycomatrix(img, 'Offset', offsets, 'Symmetric', true, 'NumLevels', 64);
+  offsets = [0 1; -1 1; -1 0; -1 -1]; % Direzioni multiple
+  glcm = graycomatrix(img, ...
+                      'Offset', offsets, ...
+                      'Symmetric', true, ...
+                      'NumLevels', 32); % Riduzione livelli di grigio
 
   % estrazione delle feature statistiche relative alla GLCM
   stats = graycoprops(glcm, {'Contrast', 'Correlation', 'Energy', 'Homogeneity'});
