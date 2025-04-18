@@ -1,68 +1,117 @@
-function [features, feature_names] = compute_color_descriptors(img, mask)
-  % Controllo input
+function [features, feature_names] = compute_color_descriptors(img, mask, varargin)
+% compute_color_descriptors  Estrae descrittori statistici di colore da una regione mascherata.
+%
+%   [features, feature_names] = compute_color_descriptors(img, mask)
+%       Calcola le statistiche dei pixel nei tre spazi colore (RGB, HSV, LAB)
+%       per l'immagine RGB `img` usando la maschera binaria `mask`.
+%       Restituisce un vettore `features` e i nomi corrispondenti.
+%
+%   [...] = compute_color_descriptors(..., 'Name', Value, ...)
+%       Permette di specificare opzioni aggiuntive tramite coppie nome/valore.
+%
+%   Opzioni:
+%     'use_var'          - Se true, calcola la varianza anziché la deviazione standard (default: false)
+%     'compute_skewness' - Se true, calcola la skewness per ogni canale (default: false)
+%     'compute_kurtosis' - Se true, calcola la kurtosis per ogni canale (default: false)
+%
+%   Output:
+%     features        - Vettore riga contenente le statistiche concatenate
+%     feature_names   - Cell array con i nomi delle feature, utile per riferimento
+%
+%   Feature calcolate:
+%     - Media di ciascun canale nei tre spazi colore (RGB, HSV, LAB)
+%     - Deviazione standard o varianza per ciascun canale
+%     - (Opzionale) Skewness e kurtosis per ciascun canale
+%
+%   Esempio:
+%     img = imread('leaf.jpg');
+%     mask = imbinarize(rgb2gray(img));
+%     [f, names] = compute_color_descriptors(img, mask, ...
+%                  'use_var', false, 'compute_skewness', true);
+%
+%   Note:
+%     - L'immagine viene convertita automaticamente in double
+%     - La maschera viene binarizzata internamente
+%     - Il vettore delle feature ha dimensione variabile in base alle opzioni
+
+  % --- Input check ---
   if nargin < 2
       error('Devi fornire un''immagine e una maschera binaria.');
   end
   if size(img,3) ~= 3
       error('L''immagine deve essere RGB.');
   end
-  
-  % Converte l'immagine in double
-  img = im2double(img);
-  
-  % TODO: ottimizzare applicazione maschera
-  
-  % Assicura che la maschera sia binaria
-  mask = mask > 0;
 
-  % Converte in LAB e HSV
+  % --- Parametri opzionali ---
+  p = inputParser;
+  addParameter(p, 'use_var', false, @(x) islogical(x));
+  addParameter(p, 'compute_skewness', false, @(x) islogical(x));
+  addParameter(p, 'compute_kurtosis', false, @(x) islogical(x));
+  parse(p, varargin{:});
+  use_var = p.Results.use_var;
+  do_skew = p.Results.compute_skewness;
+  do_kurt = p.Results.compute_kurtosis;
+
+  % --- Preparazione immagini ---
+  img = im2double(img);
+  mask = mask > 0;
   labImg = rgb2lab(img);
   hsvImg = rgb2hsv(img);
 
-  % Seleziona solo i pixel validi della maschera
-  valid_pixels_RGB = img(repmat(mask, [1, 1, 3])); % Estrai solo i pixel validi in RGB
-  valid_pixels_LAB = labImg(repmat(mask, [1, 1, 3])); % Estrai solo i pixel validi in LAB
-  valid_pixels_HSV = hsvImg(repmat(mask, [1, 1, 3])); % Estrai solo i pixel validi in HSV
+  % --- Info per iterazione ---
+  colorSpaces = {
+      img,    {'Red', 'Green', 'Blue'};
+      hsvImg, {'Hue', 'Saturation', 'Value'};
+      labImg, {'L', 'A', 'B'};
+  };
+  num_stats = 1 + 1 + do_skew + do_kurt;  % mean + std/var + skew + kurt
+  total_features = size(colorSpaces,1) * 3 * num_stats;
 
-  % Ridimensiona in un formato Nx3 per il calcolo statistico
-  valid_pixels_RGB = reshape(valid_pixels_RGB, [], 3);
-  valid_pixels_LAB = reshape(valid_pixels_LAB, [], 3);
-  valid_pixels_HSV = reshape(valid_pixels_HSV, [], 3);
+  % --- Preallocazione ---
+  features = zeros(1, total_features);
+  feature_names = cell(1, total_features);
+  idx = 1;
 
-  % Rimuove eventuali righe nulle (causate da reshape su una maschera completamente nera)
-  valid_pixels_RGB = valid_pixels_RGB(any(valid_pixels_RGB, 2), :);
-  valid_pixels_LAB = valid_pixels_LAB(any(valid_pixels_LAB, 2), :);
-  valid_pixels_HSV = valid_pixels_HSV(any(valid_pixels_HSV, 2), :);
+  % --- Estrazione feature ---
+  for i = 1:size(colorSpaces, 1)
+      colorImg = colorSpaces{i,1};
+      channelNames = colorSpaces{i,2};
 
-  % Calcolo delle medie
-  meanRed = mean(valid_pixels_RGB(:, 1));
-  meanGreen = mean(valid_pixels_RGB(:, 2));
-  meanBlue = mean(valid_pixels_RGB(:, 3));
-  meanHue = mean(valid_pixels_HSV(:, 1));
-  meanSaturation = mean(valid_pixels_HSV(:, 2));
-  meanValue = mean(valid_pixels_HSV(:, 3));
-  meanL = mean(valid_pixels_LAB(:, 1));
-  meanA = mean(valid_pixels_LAB(:, 2));
-  meanB = mean(valid_pixels_LAB(:, 3));
+      for c = 1:3
+          channel = colorImg(:,:,c);
+          values = channel(mask);
 
-  % Calcolo delle varianze
-  varRed = var(valid_pixels_RGB(:, 1));
-  varGreen = var(valid_pixels_RGB(:, 2));
-  varBlue = var(valid_pixels_RGB(:, 3));
-  varHue = var(valid_pixels_HSV(:, 1));
-  varSaturation = var(valid_pixels_HSV(:, 2));
-  varValue = var(valid_pixels_HSV(:, 3));
-  varL = var(valid_pixels_LAB(:, 1));
-  varA = var(valid_pixels_LAB(:, 2));
-  varB = var(valid_pixels_LAB(:, 3));
+          % Media
+          mu = mean(values);
+          features(idx) = mu;
+          feature_names{idx} = ['mean' channelNames{c}];
+          idx = idx + 1;
 
-  % Creazione vettore con le features
-  features = [meanRed, meanGreen, meanBlue, meanHue, meanSaturation, meanValue, ...
-              meanL, meanA, meanB, varRed, varGreen, varBlue, varHue, varSaturation, varValue, ...
-              varL, varA, varB];
+          % Varianza o Dev. Standard
+          if use_var
+              val = var(values);
+              name = ['var' channelNames{c}];
+          else
+              val = std(values);
+              name = ['std' channelNames{c}];
+          end
+          features(idx) = val;
+          feature_names{idx} = name;
+          idx = idx + 1;
 
-  feature_names = {'meanRed', 'meanGreen', 'meanBlue', 'meanHue', ...
-                   'meanSaturation', 'meanValue', 'meanL', 'meanA', 'meanB', ...
-                   'varRed', 'varGreen', 'varBlue', 'varHue', ...
-                   'varSaturation', 'varValue', 'varL', 'varA', 'varB'};
+          % Skewness
+          if do_skew
+              features(idx) = skewness(values);
+              feature_names{idx} = ['skew' channelNames{c}];
+              idx = idx + 1;
+          end
+
+          % Kurtosis
+          if do_kurt
+              features(idx) = kurtosis(values);
+              feature_names{idx} = ['kurt' channelNames{c}];
+              idx = idx + 1;
+          end
+      end
+  end
 end
