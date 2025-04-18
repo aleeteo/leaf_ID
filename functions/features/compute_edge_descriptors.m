@@ -2,7 +2,7 @@ function [features, feature_names] = compute_edge_descriptors(mask)
   % Parametro per l'estrazione della signature (passo angolare)
 
   % Estrarre la firma del contorno utilizzando la funzione fornita
-  signature = extract_polar_edge_signrature(mask, 'angle_step', 5, 'visualize', false);
+  signature = extract_polar_edge_signature(mask, 'angle_step', 5, 'visualize', false);
   
   % Calcolare le feature richieste
   mean_val = mean(signature);                % Media
