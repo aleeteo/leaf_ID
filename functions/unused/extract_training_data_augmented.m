@@ -23,7 +23,6 @@ function [data_augmented, minmax_augmented] = extract_training_data_augmented(sa
   [~, feature_names] = compute_descriptors(img, mask, labels(1));
 
   % Creazione di una table vuota con colonne predefinite
-  % TODO: aggiornare dimensioni
   feature_types = [{'categorical'}, repmat({'double'}, 1, numel(feature_names) - 1)];
   data_augmented = table('Size', [nimages*molt_factor, numel(feature_names)], ...
                'VariableTypes', feature_types, ...
