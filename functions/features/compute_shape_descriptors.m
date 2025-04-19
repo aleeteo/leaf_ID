@@ -21,19 +21,14 @@ function shape_table = compute_shape_descriptors(img, mask)
     compactness = (perimeter^2) / area;
     circularity = (4 * pi * area) / (perimeter^2);
 
-    % Hu moments (shape e grayscale)
-    hu       = compute_hu_moments(mask);
+    hu       = compute_hu_moments(mask, img);
     hu_names = {'Hu_1', 'Hu_2', 'Hu_3', 'Hu_4', ...
-                'Hu_5', 'Hu_6', 'Hu_7'};
-               
-    hu_gray       = compute_hu_moments(mask, img);
-    hu_gray_names = {'Hu_gray_1', 'Hu_gray_2', 'Hu_gray_3', 'Hu_gray_4', ...
-                     'Hu_gray_5', 'Hu_gray_6', 'Hu_gray_7'};
+                     'Hu_5', 'Hu_6', 'Hu_7'};
     
     % Tutte le feature e nomi
-    features = [compactness, circularity, eccentricity, hu, hu_gray];
+    features = [compactness, circularity, eccentricity, hu];
     feature_names = [{'Compactness', 'Circularity', 'Eccentricity'}, ...
-                     hu_names, hu_gray_names];
+                     hu_names];
 
     % Costruzione della table
     shape_table = array2table(features, 'VariableNames', feature_names);
