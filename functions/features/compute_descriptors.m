@@ -1,49 +1,52 @@
-function [descriptor_row, feature_names] = compute_descriptors(img, mask, label)
-  % Funzione per calcolare i descrittori di un'immagine e restituire una riga di dati
-  % Input:
-  %   - img: immagine in formato matrice
-  %   - mask: maschera binaria associata all'immagine
-  %   - label: etichetta dell'immagine
-  % Output:
-  %   - descriptor_row: riga di una table con label e descrittori
-  %   - feature_names: opzionale, cell array con i nomi dei descrittori
+function descriptors = compute_descriptors(img, mask, label)
+  % COMPUTE_DESCRIPTORS Calcola i descrittori per una regione fogliare.
   %
+  %   descriptor_row = compute_descriptors(img, mask, label)
+  %
+  %   INPUT:
+  %       img   - Immagine RGB della foglia (matrix HxWx3)
+  %       mask  - Maschera binaria (HxW) della foglia
+  %       label - Etichetta della foglia (stringa o char array)
+  %
+  %   OUTPUT:
+  %       descriptor_row - Tabella contenente:
+  %           - La label come variabile categorica
+  %           - I descrittori shape, texture, color ed edge
+  %
+  %   NOTE:
+  %       - Esegue una pre-elaborazione sul canale L* per uniformare l’illuminazione.
+  %       - Usa le funzioni modulari per l’estrazione dei descrittori.
+  %       - Tutte le feature sono contenute in una singola riga della tabella.
+  %
+  %   REQUIRES:
+  %       compute_shape_descriptors
+  %       compute_texture_descriptors
+  %       compute_color_descriptors
+  %       compute_edge_descriptors
+
   arguments
     img (:, :, :)
     mask (:, :)
     label char = 'undefined'
   end
 
-  % Pre-elaborazione immagine (correzione gamma su canale L*)
+  % Preprocessing del canale L*
   labImg = rgb2lab(im2double(img));
   gamma = 0.7;
   labImg(:,:,1) = ((labImg(:,:,1) / 100) .^ gamma) * 100;
   img_preprocessed = uint8(lab2rgb(labImg) * 255);
-  
-  % Conversione dell'etichetta in formato categoriale
-  if ~iscell(label)
-      label = {label}; % lo converte in cella se non lo è già
-  end
-  label = categorical(label);
 
-  % Estrazione delle feature
-  [shape_features, shape_names] = compute_shape_descriptors(img_preprocessed, mask);
-  [texture_features, texture_names] = compute_texture_descriptors(img_preprocessed, mask);
-  [color_features, color_names] = compute_color_descriptors(img_preprocessed, mask);
-  [edge_features, edge_names] = compute_edge_descriptors(mask);
-  
-  % Creazione della table separando label e feature numeriche
-  label_table = table(label, 'VariableNames', {'Label'});
-  feature_table = array2table([shape_features, texture_features, color_features, edge_features]);
+  % Estrazione tabelle descrittori
+  shape_table   = compute_shape_descriptors(img_preprocessed, mask);
+  texture_table = compute_texture_descriptors(img_preprocessed, mask);
+  color_table   = compute_color_descriptors(img_preprocessed, mask);
+  edge_table    = compute_edge_descriptors(mask);
 
-  % Unire le due table in una riga
-  descriptor_row = [label_table, feature_table];
+  % Crea tabella con label
+  label_col = table(categorical({label}), 'VariableNames', {'Label'});
 
-  % Inizializzazione opzionale dei nomi delle feature
-  feature_names = {};
-  if nargout > 1
-    feature_names = [{'Label'}, shape_names, texture_names, color_names, edge_names];
-  end
+  % Unione finale
+  descriptors = [label_col, shape_table, texture_table, color_table, edge_table];
 end
 
 

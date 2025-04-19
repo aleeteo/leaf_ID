@@ -1,26 +1,28 @@
-function [features, feature_names] = compute_texture_descriptors(img, mask)
-  % Controllo input
+function texture_table = compute_texture_descriptors(img, mask)
+  % Verifica input
   if nargin < 2
-    error('Devi fornire un''immagine e una maschera binaria.');
-  end
-  
-  % Controllo che l'immagine sia in scala di grigi
-  if size(img, 3) ~= 1
-    img = rgb2gray(img);
+      error('Devi fornire un''immagine e una maschera binaria.');
   end
 
+  % Conversione in scala di grigi se necessario
+  if size(img, 3) ~= 1
+      img = rgb2gray(img);
+  end
+
+  % Applica maschera all'immagine
   masked_img = img .* uint8(mask);
 
+  % Calcolo delle feature
   [glcm_features, glcm_feature_names] = compute_glcm_features(masked_img);
   [stat_features, stats_feature_names] = compute_hist_stats_descriptors(masked_img);
   avg_edge = compute_avg_edge(img, mask);
 
+  % Aggregazione
   features = [glcm_features, avg_edge, stat_features];
+  feature_names = [glcm_feature_names, {'avg_edge'}, stats_feature_names];
 
-  % controllo sul numero di output
-  if nargout > 1 
-    feature_names = [glcm_feature_names, {'avg_edge'}, stats_feature_names];
-  end
+  % Costruzione della table
+  texture_table = array2table(features, 'VariableNames', feature_names);
 end
 
 function [features, feature_names] = compute_glcm_features(img)

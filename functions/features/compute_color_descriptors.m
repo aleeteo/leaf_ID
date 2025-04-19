@@ -1,39 +1,4 @@
-function [features, feature_names] = compute_color_descriptors(img, mask, varargin)
-% compute_color_descriptors  Estrae descrittori statistici di colore da una regione mascherata.
-%
-%   [features, feature_names] = compute_color_descriptors(img, mask)
-%       Calcola le statistiche dei pixel nei tre spazi colore (RGB, HSV, LAB)
-%       per l'immagine RGB `img` usando la maschera binaria `mask`.
-%       Restituisce un vettore `features` e i nomi corrispondenti.
-%
-%   [...] = compute_color_descriptors(..., 'Name', Value, ...)
-%       Permette di specificare opzioni aggiuntive tramite coppie nome/valore.
-%
-%   Opzioni:
-%     'use_var'          - Se true, calcola la varianza anziché la deviazione standard (default: false)
-%     'compute_skewness' - Se true, calcola la skewness per ogni canale (default: false)
-%     'compute_kurtosis' - Se true, calcola la kurtosis per ogni canale (default: false)
-%
-%   Output:
-%     features        - Vettore riga contenente le statistiche concatenate
-%     feature_names   - Cell array con i nomi delle feature, utile per riferimento
-%
-%   Feature calcolate:
-%     - Media di ciascun canale nei tre spazi colore (RGB, HSV, LAB)
-%     - Deviazione standard o varianza per ciascun canale
-%     - (Opzionale) Skewness e kurtosis per ciascun canale
-%
-%   Esempio:
-%     img = imread('leaf.jpg');
-%     mask = imbinarize(rgb2gray(img));
-%     [f, names] = compute_color_descriptors(img, mask, ...
-%                  'use_var', false, 'compute_skewness', true);
-%
-%   Note:
-%     - L'immagine viene convertita automaticamente in double
-%     - La maschera viene binarizzata internamente
-%     - Il vettore delle feature ha dimensione variabile in base alle opzioni
-
+function color_table = compute_color_descriptors(img, mask, varargin)
   % --- Input check ---
   if nargin < 2
       error('Devi fornire un''immagine e una maschera binaria.');
@@ -114,4 +79,7 @@ function [features, feature_names] = compute_color_descriptors(img, mask, vararg
           end
       end
   end
+
+  % --- Output come table ---
+  color_table = array2table(features, 'VariableNames', feature_names);
 end
