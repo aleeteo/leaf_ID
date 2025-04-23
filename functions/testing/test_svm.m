@@ -14,7 +14,11 @@ function C = test_svm(training_data, testing_data, feature_number, saveFlag)
               struct('AcquisitionFunctionName', 'expected-improvement-plus'));
 
 
-  pred = predict(C, sub_test);
+  [pred, score] = predict(C, sub_test);
+  disp("score: ");
+  disp(score);
+  disp(class(score));
+  disp(size(score));
 
   confusion_matrix = confusionmat(sub_test.Label, pred);
   f1_score = compute_f1_score(sub_test.Label, pred);
