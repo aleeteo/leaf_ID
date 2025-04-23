@@ -1,59 +1,52 @@
-function acc = test_classify_multiple(C, minmax, visualize, images, masks, labels)
-  arguments
-    C
-    minmax
-    visualize logical = false
-    images cell = cell()
-    masks cell = cell()
-    labels cell = cell()
-  end
+function acc = test_classify_multiple(classifier, recognizer, minmax, varargin)
+%TEST_CLASSIFY_MULTIPLE Classifica oggetti in più immagini usando classificatore e riconoscitore.
 
-  % default su directory delle classi se le liste non sono fornite
+  % Parser per parametri opzionali
+  p = inputParser;
+  addParameter(p, 'Visualize', false, @(x) islogical(x));
+  addParameter(p, 'Images', {}, @(x) iscell(x));
+  addParameter(p, 'Masks', {}, @(x) iscell(x));
+  addParameter(p, 'Labels', {}, @(x) iscell(x));
+  parse(p, varargin{:});
+
+  images = p.Results.Images;
+  masks = p.Results.Masks;
+  labels = p.Results.Labels;
+  visualize = p.Results.Visualize;
+
+  % Caricamento liste da file se non fornite
   if isempty(images)
-    f = fopen('dataset/03_classes/images.list');
-    z = textscan(f,'%s');
-    fclose(f);
-    images = z{:}; 
-  end
-  if isempty(masks)
-    f = fopen('dataset/03_classes/masks.list');
-    z = textscan(f,'%s');
-    fclose(f);
-    masks = z{:}; 
-  end
-  if isempty(labels)
-    f = fopen('dataset/03_classes/labels.list');
-    z = textscan(f,'%s');
-    fclose(f);
-    labels = z{:}; 
+    images = textscan(fopen('dataset/03_classes/images.list'), '%s'); fclose('all'); images = images{1};
+    masks  = textscan(fopen('dataset/03_classes/masks.list'), '%s');  fclose('all'); masks  = masks{1};
+    labels = textscan(fopen('dataset/03_classes/labels.list'), '%s'); fclose('all'); labels = labels{1};
   end
 
-  clear z m l f
   acc = 0;
-
   for i = 1:numel(images)
     img = imread(images{i});
     mask = imread(masks{i});
     label = load(labels{i}).labeledImage;
-    
-    pred = classify_multiple(img, mask, C, minmax);
+
+    pred = classify_multiple(img, mask, classifier, recognizer, minmax);
 
     confmat = confusionmat(label(:), pred(:));
     if visualize
       figure;
-      subplot(1,2,1), imagesc(pred);
-      subplot(1,2,2), imagesc(label);
+      subplot(1,2,1), imagesc(pred), axis image off, title('Predizione');
+      subplot(1,2,2), imagesc(label), axis image off, title('Label vera');
       figure;
-      confusionchart(abs(confmat), 'RowSummary', 'row-normalized', 'ColumnSummary', 'column-normalized'), title('Confusion Matrix');
+      confusionchart(abs(confmat), ...
+          'RowSummary', 'row-normalized', ...
+          'ColumnSummary', 'column-normalized'), title('Confusion Matrix');
     end
 
     correct = sum((label(:) == pred(:)) & (pred(:) ~= 0));
     total = nnz(pred(:) ~= 0);
     accuracy = correct / total;
     acc = acc + accuracy;
-    disp(['Accuracy: ', num2str(accuracy)]);
+    disp(['Accuracy immagine ', num2str(i), ': ', num2str(accuracy)]);
   end
 
   acc = acc / numel(images);
-  disp(['Total Accuracy: ', num2str(acc)]);
+  disp(['Accuracy media: ', num2str(acc)]);
 end

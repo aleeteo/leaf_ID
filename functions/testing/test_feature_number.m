@@ -1,4 +1,4 @@
-function test_feature_number(training_data, testing_data)
+function results = test_feature_number(training_data, testing_data)
   maxFeatures = size(training_data, 2) - 1;
   featureSteps = 5:5:maxFeatures;
   numRows = length(featureSteps);
