@@ -1,7 +1,7 @@
 function descriptors = compute_descriptors(img, mask, label)
   % COMPUTE_DESCRIPTORS Calcola i descrittori per una regione fogliare.
   %
-  %   descriptor_row = compute_descriptors(img, mask, label)
+  %   descriptors = compute_descriptors(img, mask, label)
   %
   %   INPUT:
   %       img   - Immagine RGB della foglia (matrix HxWx3)
@@ -9,7 +9,7 @@ function descriptors = compute_descriptors(img, mask, label)
   %       label - Etichetta della foglia (stringa o char array)
   %
   %   OUTPUT:
-  %       descriptor_row - Tabella contenente:
+  %       descriptors - Tabella contenente:
   %           - La label come variabile categorica
   %           - I descrittori shape, texture, color ed edge
   %
@@ -30,23 +30,44 @@ function descriptors = compute_descriptors(img, mask, label)
     label char = 'undefined'
   end
 
-  % Preprocessing del canale L*
-  labImg = rgb2lab(im2double(img));
-  gamma = 0.7;
-  labImg(:,:,1) = ((labImg(:,:,1) / 100) .^ gamma) * 100;
-  img_preprocessed = uint8(lab2rgb(labImg) * 255);
+  % variabili di selezione
+  usePreprocessing = true;
+  useShape = true;
+  useTexture = true;
+  useColor = true;
+  useEdge = true;
 
-  % Estrazione tabelle descrittori
-  shape_table   = compute_shape_descriptors(img_preprocessed, mask);
-  texture_table = compute_texture_descriptors(img_preprocessed, mask);
-  color_table   = compute_color_descriptors(img_preprocessed, mask);
-  edge_table    = compute_edge_descriptors(mask);
+  if usePreprocessing
+    % Preprocessing del canale L*
+    labImg = rgb2lab(im2double(img));
+    gamma = 0.7;
+    labImg(:,:,1) = ((labImg(:,:,1) / 100) .^ gamma) * 100;
+    img = uint8(lab2rgb(labImg) * 255);
+  end
 
   % Crea tabella con label
   label_col = table(categorical({label}), 'VariableNames', {'Label'});
+  descriptors = label_col;
 
-  % Unione finale
-  descriptors = [label_col, shape_table, texture_table, color_table, edge_table];
+  if useShape
+    shape_table   = compute_shape_descriptors(img, mask);
+    descriptors = [descriptors, shape_table];
+  end
+
+  if useTexture
+    texture_table = compute_texture_descriptors(img, mask);
+    descriptors = [descriptors, texture_table];
+  end
+
+  if useColor
+    color_table   = compute_color_descriptors(img, mask);
+    descriptors = [descriptors, color_table];
+  end
+
+  if useEdge
+    edge_table    = compute_edge_descriptors(mask);
+    descriptors = [descriptors, edge_table];
+  end
 end
 
 

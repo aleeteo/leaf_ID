@@ -1,16 +1,31 @@
 function edge_table = compute_edge_descriptors(mask)
-  % Estrarre la firma del contorno
-  signature = extract_polar_edge_signature(mask);
-  
-  % Calcolo delle feature
-  mean_val    = mean(signature);
-  var_val     = var(signature);
-  kurt_val    = kurtosis(signature);
-  entropy_val = -sum(signature .* log2(signature + eps));
+  % variabili di selezione
+  useSignature = true;
+  useFourier = false;
 
-  % Nomi delle feature
-  feature_names = {'Media_edge_signature', 'Varianza_edge_signature', 'Curtosi_edge_signature', 'Entropia_edge_signature'};
-  features = [mean_val, var_val, kurt_val, entropy_val];
+  features = [];
+  feature_names = {};
+
+  if useSignature || useFourier
+    % Estrarre la firma del contorno
+    signature = extract_polar_edge_signature(mask);
+  end
+
+  if useSignature
+    % Calcolo delle feature
+    mean_val    = mean(signature);
+    var_val     = var(signature);
+    kurt_val    = kurtosis(signature);
+    entropy_val = -sum(signature .* log2(signature + eps));
+
+    feature_names = [feature_names, {'edge.signature.mean', 'edge.signature.var', ...
+                     'edge.signature.kurtosis', 'edge.signature.entropy'}];
+    features = [features, mean_val, var_val, kurt_val, entropy_val];
+  end
+
+  if useFourier
+    %TODO: implemetare descrittori di Fourier
+  end
 
   % Creazione della table
   edge_table = array2table(features, 'VariableNames', feature_names);

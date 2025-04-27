@@ -39,45 +39,45 @@ function color_table = compute_color_descriptors(img, mask, varargin)
 
   % --- Estrazione feature ---
   for i = 1:size(colorSpaces, 1)
-      colorImg = colorSpaces{i,1};
-      channelNames = colorSpaces{i,2};
+    colorImg = colorSpaces{i,1};
+    channelNames = colorSpaces{i,2};
 
-      for c = 1:3
-          channel = colorImg(:,:,c);
-          values = channel(mask);
+    for c = 1:3
+      channel = colorImg(:,:,c);
+      values = channel(mask);
 
-          % Media
-          mu = mean(values);
-          features(idx) = mu;
-          feature_names{idx} = ['mean' channelNames{c}];
-          idx = idx + 1;
+      % Media
+      mu = mean(values);
+      features(idx) = mu;
+      feature_names{idx} = ['color.mean.' channelNames{c}];
+      idx = idx + 1;
 
-          % Varianza o Dev. Standard
-          if use_var
-              val = var(values);
-              name = ['var' channelNames{c}];
-          else
-              val = std(values);
-              name = ['std' channelNames{c}];
-          end
-          features(idx) = val;
-          feature_names{idx} = name;
-          idx = idx + 1;
-
-          % Skewness
-          if do_skew
-              features(idx) = skewness(values);
-              feature_names{idx} = ['skew' channelNames{c}];
-              idx = idx + 1;
-          end
-
-          % Kurtosis
-          if do_kurt
-              features(idx) = kurtosis(values);
-              feature_names{idx} = ['kurt' channelNames{c}];
-              idx = idx + 1;
-          end
+      % Varianza o Dev. Standard
+      if use_var
+        val = var(values);
+        name = ['color.var.' channelNames{c}];
+      else
+        val = std(values);
+        name = ['color.std.' channelNames{c}];
       end
+      features(idx) = val;
+      feature_names{idx} = name;
+      idx = idx + 1;
+
+      % Skewness
+      if do_skew
+        features(idx) = skewness(values);
+        feature_names{idx} = ['color.skew.' channelNames{c}];
+        idx = idx + 1;
+      end
+
+      % Kurtosis
+      if do_kurt
+        features(idx) = kurtosis(values);
+        feature_names{idx} = ['color.kurt.' channelNames{c}];
+        idx = idx + 1;
+      end
+    end
   end
 
   % --- Output come table ---

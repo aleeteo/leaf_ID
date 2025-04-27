@@ -1,42 +1,60 @@
 function shape_table = compute_shape_descriptors(img, mask)
-    % Controllo input
-    if nargin < 1
-        error('Devi fornire una maschera binaria.');
-    end
-    
-    % Etichettatura della regione connessa
-    stats = regionprops(mask, 'Area', 'Perimeter', 'Eccentricity');
+  % Controllo input
+  if nargin < 1
+      error('Devi fornire una maschera binaria.');
+  end
+  
+  % Etichettatura della regione connessa
+  stats = regionprops(mask, 'Area', 'Perimeter', 'Eccentricity');
 
-    % Verifica presenza di oggetti nella maschera
-    if isempty(stats)
-        error('La maschera non contiene oggetti validi.');
-    end
-    
-    % Estrazione proprietà base
-    area        = stats.Area;
-    perimeter   = stats.Perimeter;
-    eccentricity = stats.Eccentricity;
-    
-    % Feature derivate
-    compactness = (perimeter^2) / area;
-    circularity = (4 * pi * area) / (perimeter^2);
+  % Verifica presenza di oggetti nella maschera
+  if isempty(stats)
+      error('La maschera non contiene oggetti validi.');
+  end
 
-    % Hu moments (shape e grayscale)
-    hu       = compute_hu_moments(mask);
-    hu_names = {'Hu_1', 'Hu_2', 'Hu_3', 'Hu_4', ...
-                'Hu_5', 'Hu_6', 'Hu_7'};
-               
-    hu_gray       = compute_hu_moments(mask, img);
-    hu_gray_names = {'Hu_gray_1', 'Hu_gray_2', 'Hu_gray_3', 'Hu_gray_4', ...
-                     'Hu_gray_5', 'Hu_gray_6', 'Hu_gray_7'};
-    
-    % Tutte le feature e nomi
-    features = [compactness, circularity, eccentricity, hu, hu_gray];
-    feature_names = [{'Compactness', 'Circularity', 'Eccentricity'}, ...
-                     hu_names, hu_gray_names];
+  % variabili di selezione
+  useBase = true;
+  useHu = true;
+  useHuGray = true;
 
-    % Costruzione della table
-    shape_table = array2table(features, 'VariableNames', feature_names);
+  features = [];
+  feature_names = {};
+
+  if useBase
+      % Estrazione proprietà base
+      area        = stats.Area;
+      perimeter   = stats.Perimeter;
+      eccentricity = stats.Eccentricity;
+      
+      % Feature derivate
+      compactness = (perimeter^2) / area;
+      circularity = (4 * pi * area) / (perimeter^2);
+
+      features = [features, compactness, circularity, eccentricity];
+      feature_names = [feature_names, {'shape.Compactness', 'shape.Circularity', 'shape.Eccentricity'}];
+  end
+  if useHu
+    % Calcolo dei momenti di Hu
+    hu = compute_hu_moments(mask);
+    hu_names = {'shape.Hu.1', 'shape.Hu.2', 'shape.Hu.3', 'shape.Hu.4', ...
+                'shape.Hu.5', 'shape.Hu.6', 'shape.Hu.7'};
+    
+    features = [features, hu];
+    feature_names = [feature_names, hu_names];
+  end
+  if useHuGray
+    % Calcolo dei momenti di Hu sull'immagine originale
+    hu_gray = compute_hu_moments(mask, img);
+    hu_gray_names = {'shape.HuGray.1', 'shape.HuGray.2', 'shape.HuGray.3', ...
+                      'shape.HuGray.4', 'shape.HuGray.5', 'shape.HuGray.6', ...
+                      'shape.HuGray.7'};
+    
+    features = [features, hu_gray];
+    feature_names = [feature_names, hu_gray_names];
+  end
+
+  % Costruzione della table
+  shape_table = array2table(features, 'VariableNames', feature_names);
 end
 
 function hu = compute_hu_moments(mask, image, max_order)
