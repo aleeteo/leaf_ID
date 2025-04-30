@@ -33,13 +33,6 @@ function descriptors = compute_descriptors(img, mask, label, options)
     label char = 'undefined'
     options.preprocess (1, 1) logical = true
     options.feature_modules cell = {'shape','texture','color','edge'}
-    options.shape_features cell = {'base','hu','hugray'}
-    options.texture_features cell = {'hist','glcm','avgedge'}
-    options.color_spaces cell = {'RGB','HSV','Lab'}
-    options.use_var logical = false
-    options.compute_skewness logical = false
-    options.compute_kurtosis logical = false
-    options.edge_features cell = {'signature'}
   end
 
   % Validazione moduli richiesti
@@ -61,29 +54,22 @@ function descriptors = compute_descriptors(img, mask, label, options)
   descriptors = label_col;
 
   if ismember('shape', modules)
-    shape_table = compute_shape_descriptors(img, mask, ...
-                    "shape_features", options.shape_features);
+    shape_table = compute_shape_descriptors(img, mask);
     descriptors = [descriptors, shape_table];
   end
 
   if ismember('texture', modules)
-    texture_table = compute_texture_descriptors(img, mask, ...
-                      "texture_features", options.texture_features);
+    texture_table = compute_texture_descriptors(img, mask);
     descriptors = [descriptors, texture_table];
   end
 
   if ismember('color', modules)
-    color_table = compute_color_descriptors(img, mask, ...
-                    "color_spaces", options.color_spaces, ...
-                    "use_var", options.use_var, ...
-                    "compute_skewness", options.compute_skewness, ...
-                    "compute_kurtosis", options.compute_kurtosis);
+    color_table = compute_color_descriptors(img, mask);
     descriptors = [descriptors, color_table];
   end
 
   if ismember('edge', modules)
-    edge_table = compute_edge_descriptors(mask, ...
-                    "edge_features", options.edge_features);
+    edge_table = compute_edge_descriptors(mask);
     descriptors = [descriptors, edge_table];
   end
 end
