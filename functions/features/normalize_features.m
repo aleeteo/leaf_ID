@@ -1,43 +1,56 @@
-function [normData, minmax] = normalize_features(data, minmax, hasLabels)
-  % input: 
-  %   - data: table contenente le features da normalizzare e labels (prima colonna)
-  %   - mimax: (opzionale) matrice contenente i valori minimi e massimi di ogni feature
-  %   - hasLabels: (opzionale) booleano che indica se la prima colonna di data contiene le labels
-  % output:
-  %   - data_normalized: matrice numerica (prima colonna = labels, altre colonne = features normalizzate)
-  %   - minmax: (opzionale) matrice contenenete i valori minimi e massimi di ogni feature
-  
-  %controlli sugli argomenti
+function [normData, minMax] = normalize_features(data, minMax)
+% NORMALIZE_FEATURES  Min-max [0,1] con riconoscimento automatico label.
+%
+%   [normData, minMax] = normalize_features(data)
+%   [normData, minMax] = normalize_features(data, minMaxTrain)
+%
+% IN:
+%   data       table           — feature (+ etichette opz.) da normalizzare
+%   minMax     table 2×nFeat   — [min ; max] salvati dal TRAIN (passa [] per calcolarli)
+%
+% OUT:
+%   normData   table           — label (se presente) + feature scalate in [0,1]
+%   minMax     table 2×nFeat   — min/max usati (salvali al primo call)
+%
+% NOTE
+%   • Se la prima variabile della tabella è di tipo *categorical*, è trattata come label
+%     e rimessa in testa invariata.
+%   • Al TEST i nuovi campioni sono scalati usando ESATTAMENTE gli stessi min/max del TRAIN.
+%   • Se max==min (feature costante) la colonna è azzerata per evitare divisioni per 0.
+% ------------------------------------------------------------------------
   arguments
-    data table
-    minmax table = table()
-    hasLabels logical = true
+      data    table
+      minMax  table = table()
   end
-  
-  % Estrazione delle features
-  if hasLabels
-    features = data(:, 2:end);
+
+  % --- separa label --------------------------------------------------------
+  if iscategorical(data{:,1})
+      labelTbl = data(:,1);
+      featTbl  = data(:,2:end);
   else
-    features = data;
+      labelTbl = table();
+      featTbl  = data;
   end
+  varNames = featTbl.Properties.VariableNames;
 
-  % Se minmax è vuota, calcola i valori
-  if isempty(minmax)
-    minmax = [min(features); max(features)];
-  else
-    if height(minmax) ~= 2 || width(minmax) ~= width(features)
-      error('minmax deve avere 2 righe e lo stesso numero di colonne delle feature.');
-    end
+  % --- calcola / valida min-max -------------------------------------------
+  if isempty(minMax)         % TRAIN
+      loVec = min(featTbl{:,:},[],1);
+      hiVec = max(featTbl{:,:},[],1);
+      minMax = array2table([loVec; hiVec],'VariableNames',varNames);
+  else                        % TEST
+      if height(minMax)~=2 || width(minMax)~=width(featTbl)
+          error('minMax incompatibile con le feature');
+      end
   end
+  lo = minMax{1,:};
+  hi = minMax{2,:};
+  range = hi - lo; rangeSafe = range; rangeSafe(range==0)=1;
 
-  features_normalized = (features - minmax(1, :)) ./ (minmax(2, :) - minmax(1, :));
+  Z = (featTbl{:,:} - lo) ./ rangeSafe;
+  Z = min(max(Z,0),1);                     % clipping opzionale
+  Z(:,range==0) = 0;                       % feature costante ⇒ 0
 
-  % eventuale clipping dei valori normalizzati
-  features_normalized = max(min(features_normalized, 1), 0);  % clipping in [0,1]
-
-  if hasLabels
-      normData = [data(:,1), features_normalized];
-  else
-      normData = features_normalized;
-  end
+  featNormTbl = array2table(Z,'VariableNames',varNames);
+  normData    = [labelTbl featNormTbl];
 end

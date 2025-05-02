@@ -1,4 +1,4 @@
-function [training_data, testing_data, minmax] = extract_data(class_struct, saveFlag)
+function [training_data, testing_data, scaling_data] = extract_data(class_struct, options)
   % EXTRACT_DATA Estrae e normalizza le feature da un dataset strutturato.
   %
   %   [training_data, testing_data, minmax] = extract_data(class_struct, saveFlag)
@@ -24,17 +24,37 @@ function [training_data, testing_data, minmax] = extract_data(class_struct, save
  
   arguments
     class_struct struct
-    saveFlag {mustBeNumericOrLogical} = false
+    options.saveFlag (1,1) logical = false
+    options.standardize logical = false
+    options.log (1,1) logical = false
   end
+
+  saveFlag = options.saveFlag;
+  doLog      = options.log;
 
   nClasses = numel(class_struct);
 
+  % Logging
+  if doLog
+    fprintf('Log attivato.\n');
+    fprintf('saveFlag: %d\n', saveFlag);
+    fprintf('Standardizzazione con z-score: %d\n', options.standardize);
+    fprintf('Numero di classi: %d\n', nClasses);
+    fprintf('Controllo maschere...\n')
+  end
+
   % Controllo maschere
   for iClass = 1:nClasses
-      if numel(class_struct(iClass).masks) < 10
-          error('La classe %d ha solo %d maschere, ne servono almeno 10.', ...
-                iClass, numel(class_struct(iClass).masks));
-      end
+    if numel(class_struct(iClass).masks) < 10
+      error('La classe %d ha solo %d maschere, ne servono almeno 10.', ...
+          iClass, numel(class_struct(iClass).masks));
+    end
+  end
+
+  % Logging
+  if doLog
+    fprintf('Tutte le classi hanno almeno 10 maschere.\n');
+    fprintf('Inizio estrazione feature...\n');
   end
 
   % Accumulatori
@@ -42,35 +62,58 @@ function [training_data, testing_data, minmax] = extract_data(class_struct, save
   testTables  = {};
 
   for iClass = 1:nClasses
-      img    = class_struct(iClass).image;
-      masks  = class_struct(iClass).masks;
-      label  = class_struct(iClass).label;
+    % Logging
+    if doLog
+        fprintf('Classe %d/%d\n', iClass, nClasses);
+    end
 
-      idx = randperm(numel(masks));  % Randomizzazione
+    % Estrazione
+    img    = class_struct(iClass).image;
+    masks  = class_struct(iClass).masks;
+    label  = class_struct(iClass).label;
 
-      % Training: prime 10
-      for j = 1:10
-          desc = compute_descriptors(img, masks{idx(j)}, label);
-          trainTables{end+1} = desc;
+    idx = randperm(numel(masks));  % Randomizzazione
+
+    % Training: prime 10
+    for j = 1:10
+      desc = compute_descriptors(img, masks{idx(j)}, label);
+      trainTables{end+1} = desc;
+
+      % Logging
+      if doLog
+          fprintf('  Maschera %d/%d: %s\n', j, numel(masks), desc.Label);
       end
+    end
 
-      % Testing: resto
-      for j = 11:numel(masks)
-          desc = compute_descriptors(img, masks{idx(j)}, label);
-          testTables{end+1} = desc;
+    % Testing: resto
+    for j = 11:numel(masks)
+      desc = compute_descriptors(img, masks{idx(j)}, label);
+      testTables{end+1} = desc;
+
+      % Logging
+      if doLog
+          fprintf('  Maschera %d/%d: %s\n', j, numel(masks), desc.Label);
       end
+    end
   end
 
   % Costruzione finali
   training_data = vertcat(trainTables{:});
   testing_data  = vertcat(testTables{:});
 
-  % Normalizzazione
-  [training_data, minmax] = normalize_features(training_data);
-  [testing_data, ~]       = normalize_features(testing_data, minmax);
+  if options.standardize
+    % Standardizzazione
+    [training_data, scaling_data] = standardize_features(training_data);
+    testing_data = standardize_features(testing_data, scaling_data);
+  else
+    % Normalizzazione
+    [training_data, scaling_data] = normalize_features(training_data);
+    testing_data = normalize_features(testing_data, scaling_data);
+  end
+
 
   % Salvataggio
   if saveFlag
-      save('data/data.mat', 'training_data', 'testing_data', 'minmax');
+      save('data/data.mat', 'training_data', 'testing_data', 'scaling_data');
   end
 end
