@@ -32,8 +32,8 @@ function data = extract_test_data(saveFlag)
   end
 
   % Normalizzazione delle feature 
-  load('data/minmax.mat', 'minmax');
-  data = normalize_features(data, minmax);
+  load('data/scaling_data.mat', 'scaling_data');
+  data = normalize_features(data, scaling_data);
 
   if saveFlag
     save('data/testing_data.mat', 'data');

@@ -1,10 +1,10 @@
-function [data_augmented, minmax_augmented] = extract_training_data_augmented(saveFlag)
+function [data_augmented, scaling_data_augmented] = extract_training_data_augmented(saveFlag)
   % Funzione per l'estrazione e il salvataggio dei descrittori di forma e texture
   % Input: save (opzionale) - se true, salva i dati in un file .mat
   % Output: 
   %   data - table contenente le features per ogni immagine (labels comprese)
   %          e nomi delle features
-  %   minmax - valori minimi e massimi per la normalizzazione delle feature
+  %   scaling_data - valori minimi e massimi per la normalizzazione delle feature
   
   arguments
     saveFlag {mustBeNumericOrLogical} = false
@@ -43,13 +43,13 @@ function [data_augmented, minmax_augmented] = extract_training_data_augmented(sa
 
   % Normalizzazione delle feature 
   if nargout == 2
-    [data_augmented, minmax_augmented] = normalize_features(data_augmented);
+    [data_augmented, scaling_data_augmented] = normalize_features(data_augmented);
   else
     data_augmented = normalize_features(data_augmented);
   end
 
   if saveFlag
     save('data/training_data_augmented.mat', 'data_augmented');
-    save('data/minmax_augmented.mat', 'minmax_augmented');
+    save('data/scaling_data_augmented.mat', 'scaling_data_augmented');
   end
 end

@@ -1,4 +1,4 @@
-function [classifier, recognizer, minmax] = test_model_and_features(varargin)
+function [classifier, recognizer, scaling_data] = test_model_and_features(varargin)
   % input handling
   % if nargin < 2
   %   error('Not enough input arguments. Provide training and testing data.');
@@ -12,7 +12,7 @@ function [classifier, recognizer, minmax] = test_model_and_features(varargin)
 
   load("data/classes_structs.mat", "classes");
   disp("extracting data...");
-  [training_data, testing_data, minmax] = extract_data(classes);
+  [training_data, testing_data, scaling_data] = extract_data(classes);
   disp("data extracted");
   disp(cell2mat(training_data.Properties.VariableNames));
 

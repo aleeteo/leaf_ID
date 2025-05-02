@@ -1,16 +1,29 @@
-function C = test_knn(training_data, testing_data, feature_number, k, saveFlag)
+function C = test_knn(training_data, testing_data, options)
   arguments
     training_data table
     testing_data table
-    feature_number double {isinteger} = 25
-    k double {isinteger} = 1
-    saveFlag logical = false
+    % feature_number double {isinteger} = 25
+    % k double {isinteger} = 1
+    % saveFlag logical = false
+    options.feature_number (1,1) double {mustBeInteger} = 0
+    options.k (1,1) double {mustBeInteger} = 1
+    options.optimizeHyperparameters logical = true
+    options.saveFlag logical = false
   end
+
+  feature_number = options.feature_number;
+  k = options.k;
+  if options.optimizeHyperparameters
+    optimizeHyperparameters = 'auto';
+  else
+    optimizeHyperparameters = 'none';
+  end
+  saveFlag = options.saveFlag;
 
   [sub_train, sub_test, feat_names] = select_top_features(training_data, testing_data, feature_number);
   save('data/sel_features.mat', 'feat_names');
 
-  C = fitcknn(sub_train, 'Label', 'NumNeighbors', k, 'optimizeHyperparameters', 'auto');
+  C = fitcknn(sub_train, 'Label', 'NumNeighbors', k, 'optimizeHyperparameters', optimizeHyperparameters);
 
 
   pred = predict(C, sub_test);

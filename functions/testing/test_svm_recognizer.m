@@ -1,10 +1,14 @@
-function [C, confusion_matrix, f1_score] = test_svm_recognizer(training_data, testing_data, feature_number, saveFlag)
+function [C, confusion_matrix, f1_score] = test_svm_recognizer(training_data, testing_data, options)
   arguments
     training_data table
     testing_data table
-    feature_number double {mustBeInteger} = 25
-    saveFlag logical = false
+    options.feature_number double {mustBeInteger} = 25
+    options.OutlierFraction {mustBeNumeric, mustBePositive} = 0.05
+    options.saveFlag logical = false
   end
+
+  feature_number = options.feature_number;
+  saveFlag = options.saveFlag;
 
   % Etichette assegnate: tutte le istanze di training sono "leaf"
   training_data.Label = repmat(categorical("leaf"), height(training_data), 1);
@@ -24,7 +28,7 @@ function [C, confusion_matrix, f1_score] = test_svm_recognizer(training_data, te
               ones(height(sub_train), 1), ...
               'KernelFunction', 'rbf', ...
               'Standardize', true, ...
-              'OutlierFraction', 0.005);
+              'OutlierFraction', options.OutlierFraction);
 
   % Predizione su test set
   [pred, ~ ] = predict(C, sub_test(:, feat_names));

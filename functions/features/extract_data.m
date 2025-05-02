@@ -1,7 +1,7 @@
 function [training_data, testing_data, scaling_data] = extract_data(class_struct, options)
   % EXTRACT_DATA Estrae e normalizza le feature da un dataset strutturato.
   %
-  %   [training_data, testing_data, minmax] = extract_data(class_struct, saveFlag)
+  %   [training_data, testing_data, scaling_data] = extract_data(class_struct, saveFlag)
   %
   %   INPUT:
   %       class_struct - Struct array con i campi:
@@ -14,7 +14,7 @@ function [training_data, testing_data, scaling_data] = extract_data(class_struct
   %   OUTPUT:
   %       training_data - Tabella con le feature delle prime 10 maschere/class
   %       testing_data  - Tabella con le feature delle restanti maschere/class
-  %       minmax        - Struct con min/max per la normalizzazione
+  %       scaling_data        - Struct con min/max per la normalizzazione
   %
   %   NOTE:
   %       - Verifica che ogni classe abbia almeno 10 maschere.

@@ -1,7 +1,7 @@
-function f1_macro_obj = test_classify_multiple_new(C, minmax, images, masks, labels)
+function f1_macro_obj = test_classify_multiple_new(C, scaling_data, images, masks, labels)
   arguments
     C
-    minmax
+    scaling_data
     images cell
     masks cell
     labels cell
@@ -47,7 +47,7 @@ function f1_macro_obj = test_classify_multiple_new(C, minmax, images, masks, lab
       loaded = load(labels{i});
       label_img = loaded.labeledImage;
 
-      pred = classify_multiple(img, mask, C, minmax);
+      pred = classify_multiple(img, mask, C, scaling_data);
       [comps, num_labels] = bwlabel(mask);
 
       for objIdx = 1:num_labels

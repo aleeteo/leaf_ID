@@ -1,4 +1,4 @@
-function acc = test_classify_multiple(classifier, recognizer, minmax, varargin)
+function acc = test_classify_multiple(classifier, recognizer, scaling_data, varargin)
 %TEST_CLASSIFY_MULTIPLE Classifica oggetti in più immagini usando classificatore e riconoscitore.
 
   % Parser per parametri opzionali
@@ -27,7 +27,7 @@ function acc = test_classify_multiple(classifier, recognizer, minmax, varargin)
     mask = imread(masks{i});
     label = load(labels{i}).labeledImage;
 
-    pred = classify_multiple(img, mask, classifier, recognizer, minmax);
+    pred = classify_multiple(img, mask, classifier, recognizer, scaling_data);
 
     confmat = confusionmat(label(:), pred(:));
     if visualize

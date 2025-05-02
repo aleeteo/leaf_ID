@@ -1,4 +1,4 @@
-function [training_data, testing_data, minmax] = extract_data(class_struct, saveFlag)
+function [training_data, testing_data, scaling_data] = extract_data(class_struct, saveFlag)
   
   arguments
     class_struct struct
@@ -31,10 +31,10 @@ function [training_data, testing_data, minmax] = extract_data(class_struct, save
   end
 
   % Normalizzazione delle feature 
-  [training_data, minmax] = normalize_features(training_data);
-  [testing_data, ~] = normalize_features(testing_data, minmax);
+  [training_data, scaling_data] = normalize_features(training_data);
+  [testing_data, ~] = normalize_features(testing_data, scaling_data);
 
   if saveFlag
-    save('data/data.mat', "training_data", "testing_data", "minmax");
+    save('data/data.mat', "training_data", "testing_data", "scaling_data");
   end
 end

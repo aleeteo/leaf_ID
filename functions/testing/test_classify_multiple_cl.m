@@ -1,8 +1,8 @@
-function totAccuracy = test_classify_multiple_cl(C, minmax, visualize)
+function totAccuracy = test_classify_multiple_cl(C, scaling_data, visualize)
   arguments
     C 
-    % minmax (:, 2) table = []
-    minmax table = table();
+    % scaling_data (:, 2) table = []
+    scaling_data table = table();
     visualize logical = false
   end
 
@@ -28,10 +28,10 @@ function totAccuracy = test_classify_multiple_cl(C, minmax, visualize)
     mask = imread(masks{i});
     label = load(labels{i}).labeledImage;
     
-    if size(minmax, 1) == 0
+    if size(scaling_data, 1) == 0
       pred = classify_multiple_cl(img, mask, C);
     else
-      pred = classify_multiple_cl(img, mask, C, minmax);
+      pred = classify_multiple_cl(img, mask, C, scaling_data);
     end
 
     if visualize
