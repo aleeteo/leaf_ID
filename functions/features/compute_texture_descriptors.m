@@ -16,10 +16,10 @@ function texture_table = compute_texture_descriptors(img, mask, options)
   arguments
     img (:,:,3) uint8
     mask (:,:) logical
-    options.texture_features cell = {'hist', 'glcm', 'avgedge'}
+    options.texture_features cell = {'hist', 'glcm', 'rilbp' 'edgehistStats'}
   end
 
-  valid_features = {'hist', 'glcm', 'rilbp', 'avgedge'};
+  valid_features = {'hist', 'glcm', 'rilbp', 'edgehistStats'};
   if ~all(ismember(options.texture_features, valid_features))
     error('Valori non validi in options.texture_features. Ammessi: hist, glcm, rilbp, avgedge.');
   end
@@ -46,16 +46,15 @@ function texture_table = compute_texture_descriptors(img, mask, options)
   end
 
   if ismember('rilbp', options.texture_features)
-    %TODO: implementare LBP rotazione-invariante
-    [rilbp_features, rilbp_feature_names] = compute_rilbp_features(img, mask);
+    [rilbp_features, rilbp_feature_names] = compute_rilbp_descriptors(img, mask);
     features = [features, rilbp_features];
     feature_names = [feature_names, rilbp_feature_names];
   end
 
-  if ismember('avgedge', options.texture_features)
-    avg_edge = compute_avg_edge(img, mask);
-    features = [features, avg_edge];
-    feature_names = [feature_names, {'texture.avg_edge'}];
+  if ismember('edgehistStats', options.texture_features)
+      [eh_stats, eh_stats_names] = compute_edge_hist_descriptors(img, mask);
+      features      = [features, eh_stats];
+      feature_names = [feature_names, eh_stats_names];
   end
 
   % Costruzione della tabella
