@@ -1,10 +1,12 @@
-function [C, accuracy, feat_names] = test_svm(training_data, testing_data, feature_number, saveFlag)
+function [C, accuracy, feat_names] = test_svm(training_data, testing_data, options)
   arguments
     training_data table
     testing_data table
-    feature_number double {isinteger} = 0
-    saveFlag logical = false
+    options.feature_number (1,1) double {mustBeNonnegative} = 0
+    options.saveFlag (1,1) logical = false
   end
+  feature_number = options.feature_number;
+  saveFlag = options.saveFlag;
 
   if feature_number == 0
     sub_train = training_data;
