@@ -9,17 +9,17 @@ function texture_table = compute_texture_descriptors(img, mask, options)
 %         'hist'   : statistiche dell'istogramma (mean, var, ecc.)
 %         'glcm'   : GLCM features (contrast, correlation, ecc.)
 %         'rilbp'  : Local Binary Pattern rotation-invariant (TODO)
-%         'avgedge': media del gradiente sull'oggetto
+%         'edgehistStats' : statistiche sui gradienti del bordo (media, varianza, ecc.)
 %
 %     Default: {'hist', 'glcm', 'avgedge'}
 
   arguments
     img (:,:,3) uint8
     mask (:,:) logical
-    options.texture_features cell = {'hist', 'glcm', 'rilbp' 'edgehistStats'}
+    options.texture_features cell = {'hist', 'glcm', 'rilbp' 'edgehistStats', 'zernike'}
   end
 
-  valid_features = {'hist', 'glcm', 'rilbp', 'edgehistStats'};
+  valid_features = {'hist', 'glcm', 'rilbp', 'edgehistStats', 'zernike'};
   if ~all(ismember(options.texture_features, valid_features))
     error('Valori non validi in options.texture_features. Ammessi: hist, glcm, rilbp, avgedge.');
   end
@@ -57,6 +57,11 @@ function texture_table = compute_texture_descriptors(img, mask, options)
       feature_names = [feature_names, eh_stats_names];
   end
 
+  if ismember('zernike', options.texture_features)
+      [zernike_feats, zernike_names] = compute_zernike_descriptors(img, mask, 8); % n_max=8, ad esempio
+      features = [features, zernike_feats];
+      feature_names = [feature_names, zernike_names];
+  end
   % Costruzione della tabella
   texture_table = array2table(features, 'VariableNames', feature_names);
 end
