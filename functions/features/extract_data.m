@@ -1,46 +1,59 @@
 function [training_data, testing_data, scaling_data] = extract_data(class_struct, options)
-  % EXTRACT_DATA Estrae e normalizza le feature da un dataset strutturato.
-  %
-  %   [training_data, testing_data, scaling_data] = extract_data(class_struct, saveFlag)
-  %
-  %   INPUT:
-  %       class_struct - Struct array con i campi:
-  %           .image : immagine RGB
-  %           .masks : cell array di maschere binarie
-  %           .label : etichetta della classe
-  %
-  %       saveFlag - Booleano (default false). Se true, salva i dati su file MAT.
-  %
-  %   OUTPUT:
-  %       training_data - Tabella con le feature delle prime 10 maschere/class
-  %       testing_data  - Tabella con le feature delle restanti maschere/class
-  %       scaling_data        - Struct con min/max per la normalizzazione
-  %
-  %   NOTE:
-  %       - Verifica che ogni classe abbia almeno 10 maschere.
-  %       - Randomizza l’ordine delle maschere per ridurre overfitting.
-  %       - Normalizza le feature su base [0, 1] rispetto al training set.
-  %       - Supporta il salvataggio automatico su 'data/data.mat'.
- 
+% EXTRACT_DATA Estrae e normalizza le feature da un dataset strutturato.
+%
+%   [training_data, testing_data, scaling_data] = extract_data(class_struct, options)
+%
+%   INPUT:
+%       class_struct - Struct array con i campi:
+%           .image : immagine RGB
+%           .masks : cell array di maschere binarie
+%           .label : etichetta della classe
+%
+%       options - Struttura con campi:
+%           .saveFlag      : (bool, default false) se true, salva i dati su file MAT
+%           .standardize   : (bool, default false) se true, usa z-score invece di [0,1]
+%           .log           : (bool, default false) stampa messaggi di log
+%           .parallelize   : (bool, default true) abilita la parallelizzazione su più core
+%
+%   OUTPUT:
+%       training_data - Tabella con le feature delle prime 10 maschere/class
+%       testing_data  - Tabella con le feature delle restanti maschere/class
+%       scaling_data  - Struct con min/max (o mean/std) per normalizzazione o standardizzazione
+%
+%   NOTE:
+%       - Ogni classe deve avere almeno 10 maschere.
+%       - Le maschere vengono randomizzate per ridurre l’overfitting.
+%       - La parallelizzazione viene gestita internamente e può essere disabilitata.
+%       - I dati vengono salvati automaticamente se saveFlag è true.
+
   arguments
     class_struct struct
     options.saveFlag (1,1) logical = false
-    options.standardize logical = false
+    options.standardize (1,1) logical = false
     options.log (1,1) logical = false
+    options.parallelize (1,1) logical = true
   end
 
-  saveFlag = options.saveFlag;
-  doLog      = options.log;
+  saveFlag     = options.saveFlag;
+  doLog        = options.log;
+  doParallel   = options.parallelize;
+  nClasses     = numel(class_struct);
 
-  nClasses = numel(class_struct);
+  % Avvio automatico del pool se serve
+  if doParallel && isempty(gcp('nocreate'))
+    if doLog
+      fprintf('Nessun pool attivo. Avvio automatico...\n');
+    end
+    parpool;
+  end
 
-  % Logging
   if doLog
     fprintf('Log attivato.\n');
     fprintf('saveFlag: %d\n', saveFlag);
     fprintf('Standardizzazione con z-score: %d\n', options.standardize);
+    fprintf('Parallelizzazione attiva: %d\n', doParallel);
     fprintf('Numero di classi: %d\n', nClasses);
-    fprintf('Controllo maschere...\n')
+    fprintf('Controllo maschere...\n');
   end
 
   % Controllo maschere
@@ -51,69 +64,74 @@ function [training_data, testing_data, scaling_data] = extract_data(class_struct
     end
   end
 
-  % Logging
   if doLog
     fprintf('Tutte le classi hanno almeno 10 maschere.\n');
     fprintf('Inizio estrazione feature...\n');
   end
 
-  % Accumulatori
   trainTables = {};
   testTables  = {};
 
   for iClass = 1:nClasses
-    % Logging
     if doLog
-        fprintf('Classe %d/%d\n', iClass, nClasses);
+      fprintf('Classe %d/%d\n', iClass, nClasses);
     end
 
-    % Estrazione
     img    = class_struct(iClass).image;
     masks  = class_struct(iClass).masks;
     label  = class_struct(iClass).label;
 
     idx = randperm(numel(masks));  % Randomizzazione
 
-    % Training: prime 10
-    for j = 1:10
-      desc = compute_descriptors(img, masks{idx(j)}, label);
-      trainTables{end+1} = desc;
+    % --- Training ---
+    nTrain = 10;
+    tmpTrain = cell(1, nTrain);
 
-      % Logging
-      if doLog
-          fprintf('  Maschera %d/%d: %s\n', j, numel(masks), desc.Label);
+    if doParallel
+      parfor j = 1:nTrain
+        tmpTrain{j} = compute_descriptors(img, masks{idx(j)}, label);
+      end
+    else
+      for j = 1:nTrain
+        tmpTrain{j} = compute_descriptors(img, masks{idx(j)}, label);
       end
     end
 
-    % Testing: resto
-    for j = 11:numel(masks)
-      desc = compute_descriptors(img, masks{idx(j)}, label);
-      testTables{end+1} = desc;
+    trainTables = [trainTables, tmpTrain];
 
-      % Logging
-      if doLog
-          fprintf('  Maschera %d/%d: %s\n', j, numel(masks), desc.Label);
+    % --- Testing ---
+    nTest = numel(masks) - nTrain;
+    if nTest > 0
+      tmpTest = cell(1, nTest);
+
+      if doParallel
+        parfor j = 1:nTest
+          tmpTest{j} = compute_descriptors(img, masks{idx(j + nTrain)}, label);
+        end
+      else
+        for j = 1:nTest
+          tmpTest{j} = compute_descriptors(img, masks{idx(j + nTrain)}, label);
+        end
       end
+
+      testTables = [testTables, tmpTest];
     end
   end
 
-  % Costruzione finali
+  % Costruzione tabelle finali
   training_data = vertcat(trainTables{:});
   testing_data  = vertcat(testTables{:});
 
+  % Normalizzazione o standardizzazione
   if options.standardize
-    % Standardizzazione
     [training_data, scaling_data] = standardize_features(training_data);
     testing_data = standardize_features(testing_data, scaling_data);
   else
-    % Normalizzazione
     [training_data, scaling_data] = normalize_features(training_data);
     testing_data = normalize_features(testing_data, scaling_data);
   end
 
-
-  % Salvataggio
   if saveFlag
-      save('data/data.mat', 'training_data', 'testing_data', 'scaling_data');
+    save('data/data.mat', 'training_data', 'testing_data', 'scaling_data');
   end
 end
