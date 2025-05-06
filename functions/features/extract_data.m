@@ -29,7 +29,7 @@ function [training_data, testing_data, scaling_data] = extract_data(class_struct
   arguments
     class_struct struct
     options.saveFlag (1,1) logical = false
-    options.standardize (1,1) logical = false
+    options.standardize (1,1) logical = true
     options.log (1,1) logical = false
     options.parallelize (1,1) logical = true
   end
@@ -88,8 +88,13 @@ function [training_data, testing_data, scaling_data] = extract_data(class_struct
     tmpTrain = cell(1, nTrain);
 
     if doParallel
+      dq = parallel.pool.DataQueue;
+      updater = createProgressBar(nTrain, sprintf('Classe %d - Training', iClass));
+      afterEach(dq, @(~) updater());
+
       parfor j = 1:nTrain
         tmpTrain{j} = compute_descriptors(img, masks{idx(j)}, label);
+        send(dq, j);
       end
     else
       for j = 1:nTrain
@@ -105,8 +110,13 @@ function [training_data, testing_data, scaling_data] = extract_data(class_struct
       tmpTest = cell(1, nTest);
 
       if doParallel
+        dq = parallel.pool.DataQueue;
+        updater = createProgressBar(nTest, sprintf('Classe %d - Testing', iClass));
+        afterEach(dq, @(~) updater());
+
         parfor j = 1:nTest
           tmpTest{j} = compute_descriptors(img, masks{idx(j + nTrain)}, label);
+          send(dq, j);
         end
       else
         for j = 1:nTest
@@ -133,5 +143,22 @@ function [training_data, testing_data, scaling_data] = extract_data(class_struct
 
   if saveFlag
     save('data/data.mat', 'training_data', 'testing_data', 'scaling_data');
+  end
+end
+
+% ========================
+% Funzione progress bar
+% ========================
+function updater = createProgressBar(nTotal, title)
+  n = 0;
+  h = waitbar(0, title);
+  updater = @update;
+
+  function update()
+    n = n + 1;
+    waitbar(n / nTotal, h);
+    if n == nTotal
+      close(h);
+    end
   end
 end
