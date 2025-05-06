@@ -58,7 +58,7 @@ function texture_table = compute_texture_descriptors(img, mask, options)
   end
 
   if ismember('zernike', options.texture_features)
-      [zernike_feats, zernike_names] = compute_zernike_descriptors(img, mask, 8); % n_max=8, ad esempio
+      [zernike_feats, zernike_names] = compute_zernike_descriptors(img, mask, 4); % n_max=8, ad esempio
       features = [features, zernike_feats];
       feature_names = [feature_names, zernike_names];
   end

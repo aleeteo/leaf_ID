@@ -14,7 +14,7 @@ function shape_table = compute_shape_descriptors(img, mask, options)
   arguments
     img (:,:,3) uint8
     mask (:,:) logical
-    options.shape_features cell = {'base', 'hu', 'hugray'}
+    options.shape_features cell = {'base', 'hugray'}
   end
 
   featuresToUse = options.shape_features;

@@ -13,7 +13,7 @@ function edge_table = compute_edge_descriptors(mask, options)
 
   arguments
     mask (:,:) logical
-    options.edge_features cell = {'signature'}
+    options.edge_features cell = {'signature', 'fourier'}
   end
 
   valid_features = {'signature', 'fourier'};
@@ -40,7 +40,18 @@ function edge_table = compute_edge_descriptors(mask, options)
   end
 
   if ismember('fourier', options.edge_features)
-    % TODO: implementare descrittori di Fourier
+    % Fourier Descriptors dalla firma polare
+    fft_coeffs = fft(signature);                  % Trasformata di Fourier
+    mag_coeffs = abs(fft_coeffs);                 % Moduli (invarianti a traslazione e fase)
+
+    % Numero di coefficienti da mantenere (escludendo il primo che rappresenta la media)
+    num_coeffs = min(10, floor(numel(mag_coeffs)/2));  % Primi 10 (escluso il DC)
+    selected_coeffs = mag_coeffs(2:num_coeffs+1);      % Salta il coefficiente DC
+
+    % Nomina delle feature
+    fourier_names = strcat("edge.fourier.c", string(1:num_coeffs));
+    feature_names = [feature_names, fourier_names];
+    features = [features, selected_coeffs];
   end
 
   edge_table = array2table(features, 'VariableNames', feature_names);
