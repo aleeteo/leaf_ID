@@ -1,32 +1,32 @@
-function cm = compute_correlation_matrix(data, feature_names, show)
-  % funzione per la visualizzazione della matrice di correlazione
-  % input: 
-  %   - data: matrice numerica (prima colonna = labels, altre colonne = features)
-  %   - feature_names: (opzionale) cell array contenente i nomi delle features
-  %   - show: (opzionale) booleano che indica se visualizzare la matrice di correlazione
-  % output:
+function cm_table = compute_correlation_matrix(data, show)
+  % Calcola e visualizza la matrice di correlazione tra le feature in una tabella
+  % INPUT:
+  %   - data: table, prima colonna = labels (non usata), da 2 in poi = feature numeriche
+  %   - show: (opzionale) true per stampare la tabella di correlazione
+  % OUTPUT:
   %   - cm: matrice di correlazione
-  
+
   arguments
-    data (:,:) double
-    feature_names cell = {}
+    data table
     show (1,1) logical = false
   end
 
-  % Estrarre solo le features (escludendo la colonna delle labels)
-  features = data(:, 2:end);
-  
-  % Calcolare la matrice di correlazione
-  cm = corrcoef(features);
+  % Isolare solo le colonne numeriche tra le features
+  feature_vars = data(:, 2:end);
+  is_numeric_col = varfun(@isnumeric, feature_vars, 'OutputFormat', 'uniform');
+  feature_vars = feature_vars(:, is_numeric_col);
 
-  if (show == true)
-    if length(feature_names) ~= length(cm, 'rows')
-      disp(cm)
-    else
-      % Visualizzare la matrice di correlazione con i nomi delle features
-      feature_names = feature_names(2:end)';
-      fprintf('Matrice di correlazione:\n');
-      disp(array2table(cm, 'VariableNames', feature_names, 'RowNames', feature_names));
-    end
+  % Estrarre i dati come array
+  features = feature_vars{:,:};
+
+  % Calcolo matrice di correlazione
+  cm = corrcoef(features);
+  var_names = feature_vars.Properties.VariableNames;
+  cm_table = array2table(cm, 'VariableNames', var_names, 'RowNames', var_names);
+
+  % Visualizzazione opzionale
+  if show
+    fprintf('Matrice di correlazione:\n');
+    disp(cm_table);
   end
 end
