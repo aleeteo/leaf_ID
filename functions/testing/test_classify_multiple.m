@@ -9,6 +9,7 @@ function acc = test_classify_multiple(classifier, recognizer, scaling_data, opti
     options.labels (1,:) cell = {}
     options.visualize (1,1) logical = false
     options.standardize (1,1) logical = false
+    options.parallelize (1,1) logical = true
   end
 
   % Caricamento liste da file se non fornite
@@ -28,7 +29,7 @@ function acc = test_classify_multiple(classifier, recognizer, scaling_data, opti
     mask = imread(masks{i});
     label = load(labels{i}).labeledImage;
 
-    pred = classify_multiple(img, mask, classifier, recognizer, scaling_data, options.standardize);
+    pred = classify_multiple(img, mask, classifier, recognizer, scaling_data, standardize=true, parallelize=options.parallelize);
 
     confmat = confusionmat(label(:), pred(:));
     if options.visualize

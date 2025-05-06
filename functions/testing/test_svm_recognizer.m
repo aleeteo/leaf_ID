@@ -2,7 +2,7 @@ function [C, confusion_matrix, f1_score] = test_svm_recognizer(training_data, te
   arguments
     training_data table
     testing_data table
-    options.feature_number double {mustBeInteger} = 25
+    options.feature_number double {mustBeInteger} = 0
     options.OutlierFraction {mustBeNumeric, mustBePositive} = 0.05
     options.saveFlag logical = false
   end
