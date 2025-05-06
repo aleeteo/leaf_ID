@@ -54,17 +54,17 @@ function descriptors = compute_descriptors(img, mask, label, options)
   descriptors = label_col;
 
   if ismember('shape', modules)
-    shape_table = compute_shape_descriptors(img, mask);
+    shape_table = compute_shape_descriptors(img, mask, shape_features={'hugray'});
     descriptors = [descriptors, shape_table];
   end
 
   if ismember('texture', modules)
-    texture_table = compute_texture_descriptors(img, mask);
+    texture_table = compute_texture_descriptors(img, mask, texture_features={'rilbp' 'edgehistStats', 'zernike'});
     descriptors = [descriptors, texture_table];
   end
 
   if ismember('color', modules)
-    color_table = compute_color_descriptors(img, mask);
+    color_table = compute_color_descriptors(img, mask, color_spaces={'Lab', 'HSV'});
     descriptors = [descriptors, color_table];
   end
 
