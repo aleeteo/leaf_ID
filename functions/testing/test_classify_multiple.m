@@ -4,24 +4,17 @@ function acc = test_classify_multiple(classifier, recognizer, scaling_data, opti
     classifier
     recognizer
     scaling_data
-    options.images (1,:) cell = {}
-    options.masks (1,:) cell = {}
-    options.labels (1,:) cell = {}
-    options.visualize (1,1) logical = false
-    options.standardize (1,1) logical = false
+    options.directory (1,:) string = "dataset/03_classes"
+    options.standardize (1,1) logical = true
     options.parallelize (1,1) logical = true
+    options.visualize_predictions (1,1) logical = false
+    options.visualize_confmat (1,1) logical = false
   end
 
-  % Caricamento liste da file se non fornite
-  if isempty(options.images)
-    images = textscan(fopen('dataset/03_classes/images.list'), '%s'); fclose('all'); images = images{1};
-    masks  = textscan(fopen('dataset/03_classes/masks.list'), '%s');  fclose('all'); masks  = masks{1};
-    labels = textscan(fopen('dataset/03_classes/labels.list'), '%s'); fclose('all'); labels = labels{1};
-  else
-    images = options.images;
-    masks  = options.masks;
-    labels = options.labels;
-  end
+  directory = options.directory;
+  images = getFilePaths(char(directory + "/images"));
+  masks = getFilePaths(char(directory + "/masks"));
+  labels = getFilePaths(char(directory + "/labels"));
 
   acc = 0;
   for i = 1:numel(images)
@@ -32,10 +25,12 @@ function acc = test_classify_multiple(classifier, recognizer, scaling_data, opti
     pred = classify_multiple(img, mask, classifier, recognizer, scaling_data, standardize=true, parallelize=options.parallelize);
 
     confmat = confusionmat(label(:), pred(:));
-    if options.visualize
+    if options.visualize_predictions
       figure;
       subplot(1,2,1), imagesc(pred), axis image off, title('Predizione');
       subplot(1,2,2), imagesc(label), axis image off, title('Label vera');
+    end
+    if options.visualize_confmat
       figure;
       confusionchart(abs(confmat), ...
           'RowSummary', 'row-normalized', ...
