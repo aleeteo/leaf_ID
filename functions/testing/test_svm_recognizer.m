@@ -2,12 +2,11 @@ function [recognizer, confusion_matrix, f1_score] = test_svm_recognizer(training
   arguments
     training_data table
     testing_data table
-    options.feature_number double {mustBeInteger} = 0
-    options.OutlierFraction {mustBeNumeric, mustBePositive} = 0.05
+    options.OutlierFraction {mustBeNumeric, mustBePositive} = 0.5
     options.saveFlag logical = false
   end
 
-  feature_number = options.feature_number;
+  % feature_number = options.feature_number;
   saveFlag = options.saveFlag;
 
   % Etichette assegnate: tutte le istanze di training sono "leaf"
@@ -19,19 +18,14 @@ function [recognizer, confusion_matrix, f1_score] = test_svm_recognizer(training
   mapped_labels(numeric_labels == 11) = "unknown";
   testing_data.Label = categorical(mapped_labels);
 
-  % Selezione delle feature più importanti
-  [sub_train, sub_test, feat_names] = select_top_features(training_data, testing_data, feature_number);
-  save('data/sel_features.mat', 'feat_names');
-
   % Addestra una One-Class SVM su sole foglie
-  recognizer = fitcsvm(sub_train(:, feat_names), ...
-              ones(height(sub_train), 1), ...
+  recognizer = fitcsvm(training_data, ...
+              ones(height(training_data), 1), ...
               'KernelFunction', 'rbf', ...
-              'Standardize', true, ...
               'OutlierFraction', options.OutlierFraction);
 
   % Predizione su test set
-  [pred, ~ ] = predict(recognizer, sub_test(:, feat_names));
+  [pred, ~ ] = predict(recognizer, testing_data);
 
   % Conversione: da 1/-1 a categorie "leaf"/"unknown"
   pred_label = repmat("unknown", size(pred));
@@ -39,8 +33,8 @@ function [recognizer, confusion_matrix, f1_score] = test_svm_recognizer(training
   pred_label = categorical(pred_label);
 
   % Calcolo della matrice di confusione e F1 score
-  confusion_matrix = confusionmat(sub_test.Label, pred_label);
-  f1_score = compute_f1_score(sub_test.Label, pred_label);
+  confusion_matrix = confusionmat(testing_data.Label, pred_label);
+  f1_score = compute_f1_score(testing_data.Label, pred_label);
 
   % Output a schermo
   fprintf('F1 Score: %f\n', f1_score);

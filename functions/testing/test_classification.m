@@ -1,55 +1,47 @@
-function [C, accuracy, feat_names] = test_classification(training_data, testing_data, options)
+function [classifier, test_accuracy] = test_classification(training_data, testing_data, options)
   arguments
     training_data table
     testing_data table
-    options.feature_number (1,1) double {mustBeNonnegative} = 0
     options.saveFlag (1,1) logical = false
     options.model (1,1) string {mustBeMember(options.model, ["svm", "tree", "knn", "bayes", "ensamble", "auto"])} = "svm"
     options.optimize (1,1) {mustBeNumericOrLogical} = false
   end
 
-  feature_number = options.feature_number;
-  saveFlag = options.saveFlag;
-
-  if feature_number == 0
-    sub_train = training_data;
-    sub_test = testing_data;
-    feat_names = training_data.Properties.VariableNames;
+  if options.optimize 
+    optimize='auto'; 
   else 
-    [sub_train, sub_test, feat_names] = select_top_features(training_data, testing_data, feature_number);
-    save('data/sel_features.mat', 'feat_names');
+    optimize='none'; 
   end
-  
+
   switch options.model
     case 'svm'
-      C = fitcecoc(sub_train, 'Label');
+      classifier = fitcecoc(training_data, 'Label', 'OptimizeHyperparameters', optimize);
     case 'tree'
-      C = fitctree(sub_train, 'Label');
+      classifier = fitctree(training_data, 'Label', 'OptimizeHyperparameters', optimize);
     case 'knn'
-      C = fitcknn(sub_train, 'Label');
+      classifier = fitcknn(training_data, 'Label', 'OptimizeHyperparameters', optimize);
     case 'bayes'
-      C = fitcnb(sub_train, 'Label');
+      classifier = fitcnb(training_data, 'Label', 'OptimizeHyperparameters', optimize);
     case 'ensamble'
-      C = fitcensemble(sub_train, 'Label', 'Method', 'Bag');
+      classifier = fitcensemble(training_data, 'Label', 'Method', 'Bag', 'OptimizeHyperparameters', optimize);
     case 'auto'
-      C = fitcauto(sub_train, 'Label', 'OptimizeHyperparameters', 'auto');
+      classifier = fitcauto(training_data, 'Label', 'OptimizeHyperparameters', optimize);
     otherwise
       error('Invalid model type. Choose from svm, tree, knn, or bayes.');
   end
   
+  pred = predict(classifier, testing_data);
 
-  pred = predict(C, sub_test);
-
-  confusion_matrix = confusionmat(sub_test.Label, pred);
-  accuracy = sum(diag(confusion_matrix)) / sum(confusion_matrix(:));
-  f1_score = compute_f1_score(sub_test.Label, pred);
+  confusion_matrix = confusionmat(testing_data.Label, pred);
+  test_accuracy = sum(diag(confusion_matrix)) / sum(confusion_matrix(:));
+  f1_score = compute_f1_score(testing_data.Label, pred);
   fprintf('F1 Score: %f\n', f1_score);
   confusionchart(abs(confusion_matrix));
 
-  if saveFlag
+  if options.saveFlag
     % Save the model to a file
-    modelFileName = 'data/svm_model.mat';
-    save(modelFileName, 'C');
+    modelFileName = 'data/classifier.mat';
+    save(modelFileName, 'classifier', 'test_accuracy');
     fprintf('Model saved to %s\n', modelFileName);
   end
 end
