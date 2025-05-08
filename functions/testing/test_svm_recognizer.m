@@ -1,4 +1,4 @@
-function [C, confusion_matrix, f1_score] = test_svm_recognizer(training_data, testing_data, options)
+function [recognizer, confusion_matrix, f1_score] = test_svm_recognizer(training_data, testing_data, options)
   arguments
     training_data table
     testing_data table
@@ -24,14 +24,14 @@ function [C, confusion_matrix, f1_score] = test_svm_recognizer(training_data, te
   save('data/sel_features.mat', 'feat_names');
 
   % Addestra una One-Class SVM su sole foglie
-  C = fitcsvm(sub_train(:, feat_names), ...
+  recognizer = fitcsvm(sub_train(:, feat_names), ...
               ones(height(sub_train), 1), ...
               'KernelFunction', 'rbf', ...
               'Standardize', true, ...
               'OutlierFraction', options.OutlierFraction);
 
   % Predizione su test set
-  [pred, ~ ] = predict(C, sub_test(:, feat_names));
+  [pred, ~ ] = predict(recognizer, sub_test(:, feat_names));
 
   % Conversione: da 1/-1 a categorie "leaf"/"unknown"
   pred_label = repmat("unknown", size(pred));
@@ -47,7 +47,7 @@ function [C, confusion_matrix, f1_score] = test_svm_recognizer(training_data, te
   confusionchart(confusion_matrix);
 
   if saveFlag
-    save('data/svm_model_recognizer.mat', 'C');
+    save('data/recognizer.mat', 'recognizer');
     fprintf('Modello salvato in data/svm_model_recognizer.mat\n');
   end
 end

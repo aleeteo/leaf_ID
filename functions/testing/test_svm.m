@@ -1,4 +1,4 @@
-function [C, accuracy, feat_names] = test_svm(training_data, testing_data, options)
+function [classifier, accuracy, feat_names] = test_svm(training_data, testing_data, options)
   arguments
     training_data table
     testing_data table
@@ -18,11 +18,11 @@ function [C, accuracy, feat_names] = test_svm(training_data, testing_data, optio
   end
 
   % C = fitcknn(sub_train, 'Label', 'NumNeighbors', k, 'optimizeHyperparameters', 'auto');
-  C = fitcecoc(sub_train, 'Label', 'OptimizeHyperparameters', 'auto', 'HyperparameterOptimizationOptions', ...
+  classifier = fitcecoc(sub_train, 'Label', 'OptimizeHyperparameters', 'auto', 'HyperparameterOptimizationOptions', ...
               struct('AcquisitionFunctionName', 'expected-improvement-plus'));
 
 
-  pred = predict(C, sub_test);
+  pred = predict(classifier, sub_test);
 
   confusion_matrix = confusionmat(sub_test.Label, pred);
   accuracy = sum(diag(confusion_matrix)) / sum(confusion_matrix(:));
@@ -32,8 +32,8 @@ function [C, accuracy, feat_names] = test_svm(training_data, testing_data, optio
 
   if saveFlag
     % Save the model to a file
-    modelFileName = 'data/svm_model.mat';
-    save(modelFileName, 'C');
+    modelFileName = 'data/classifier.mat';
+    save(modelFileName, 'classifier');
     fprintf('Model saved to %s\n', modelFileName);
   end
 end
