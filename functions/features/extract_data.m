@@ -1,4 +1,5 @@
-function [training_data, testing_data, scaling_data] = extract_data(class_struct, options)
+function [training_data, testing_data, scaling_data, training_data_unknown, testing_data_unknown] ...
+  = extract_data(class_struct, unknown_struct, options)
 % EXTRACT_DATA Estrae e normalizza le feature da un dataset strutturato.
 %
 %   [training_data, testing_data, scaling_data] = extract_data(class_struct, options)
@@ -19,7 +20,8 @@ function [training_data, testing_data, scaling_data] = extract_data(class_struct
 %       training_data - Tabella con le feature delle prime 10 maschere/class
 %       testing_data  - Tabella con le feature delle restanti maschere/class
 %       scaling_data  - Struct con min/max (o mean/std) per normalizzazione o standardizzazione
-%       training_data_unknown - Tabella con le feature e maschere sconosciute
+%       training_data_unknown - Tabella con le feature degli oggetti sconosciuti
+%       testing_data_unknown  - Tabella con le feature degli oggetti sconosciuti
 %
 %   NOTE:
 %       - Ogni classe deve avere almeno 10 maschere.
@@ -29,6 +31,7 @@ function [training_data, testing_data, scaling_data] = extract_data(class_struct
 
   arguments
     class_struct struct
+    unknown_struct struct
     options.saveFlag (1,1) logical = false
     options.standardize (1,1) logical = true
     options.log (1,1) logical = false
@@ -142,8 +145,11 @@ function [training_data, testing_data, scaling_data] = extract_data(class_struct
     testing_data = normalize_features(testing_data, scaling_data);
   end
 
+  [training_data_unknown, testing_data_unknown] = extract_data_unknown(unknown_struct, scaling_data, ...
+      saveFlag=false, standardize=options.standardize, log=doLog);
+
   if saveFlag
-    save('data/data.mat', 'training_data', 'testing_data', 'scaling_data');
+    save('data/data.mat', 'training_data', 'testing_data', 'scaling_data', 'training_data_unknown', 'testing_data_unknown');
   end
 end
 

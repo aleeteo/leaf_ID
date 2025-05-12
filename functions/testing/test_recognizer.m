@@ -2,9 +2,9 @@ clear
 close all
 
 load('data/data.mat')
-img = imread("dataset/05_unknown/images/unknown_03.jpg");
-mask = imread("dataset/05_unknown/masks/unknown_03_mask.png");
-labels = load("dataset/05_unknown/labels/unknown_03_label.mat").labeledImage;
+img = imread("dataset/06_unknown_miscs/images/unknown_03.jpg");
+mask = imread("dataset/06_unknown_miscs/masks/unknown_03_mask.png");
+labels = load("dataset/06_unknown_miscs/labels/unknown_03_label.mat").labeledImage;
 
 is_leaf = train_leaf_recognizer(training_data);
 
