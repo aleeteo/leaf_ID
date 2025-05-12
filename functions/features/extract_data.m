@@ -19,6 +19,7 @@ function [training_data, testing_data, scaling_data] = extract_data(class_struct
 %       training_data - Tabella con le feature delle prime 10 maschere/class
 %       testing_data  - Tabella con le feature delle restanti maschere/class
 %       scaling_data  - Struct con min/max (o mean/std) per normalizzazione o standardizzazione
+%       training_data_unknown - Tabella con le feature e maschere sconosciute
 %
 %   NOTE:
 %       - Ogni classe deve avere almeno 10 maschere.
