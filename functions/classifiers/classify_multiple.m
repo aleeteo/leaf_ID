@@ -1,7 +1,7 @@
-function pred = classify_multiple(img, mask, classifier, recognizer, scaling_data, options)
+function [pred, acc, cm] = classify_multiple(img, mask, classifier, recognizer, scaling_data, options)
 %CLASSIFY_MULTIPLE Classifica gli oggetti segmentati in un'immagine.
 %
-%   pred = classify_multiple(img, mask, classifier, recognizer, scaling_data, standardize, parallelize)
+%   [pred, acc, cm] = classify_multiple(img, mask, classifier, recognizer, scaling_data, options)
 %
 %   INPUT:
 %     img         - Immagine RGB (uint8)
@@ -9,11 +9,15 @@ function pred = classify_multiple(img, mask, classifier, recognizer, scaling_dat
 %     classifier  - Modello di classificazione finale
 %     recognizer  - Modello di riconoscimento (es. unknowns)
 %     scaling_data- Struct con parametri di normalizzazione o standardizzazione
-%     standardize - Booleano: true = z-score, false = [0,1]
-%     parallelize - Booleano: true = usa parfor, false = usa for
+%     options     - Struttura con campi opzionali:
+%         .labels        - Matrice di label ground truth (stessa size di img/mask)
+%         .standardize   - true = z-score, false = [0,1] (default: true)
+%         .parallelize   - true = usa parfor, false = for (default: false)
 %
 %   OUTPUT:
 %     pred - Maschera con le etichette assegnate (interi)
+%     acc  - Accuratezza sulle regioni se disponibili le label (altrimenti [])
+%     cm   - Confusion matrix sulle regioni se disponibili le label (altrimenti [])
 
   arguments
     img (:, :, 3) uint8
@@ -21,9 +25,11 @@ function pred = classify_multiple(img, mask, classifier, recognizer, scaling_dat
     classifier
     recognizer
     scaling_data
+    options.labels (:,:) = []
     options.standardize (1,1) logical = true
     options.parallelize (1,1) logical = false
   end
+
   standardize = options.standardize;
   parallelize = options.parallelize;
 
@@ -34,8 +40,7 @@ function pred = classify_multiple(img, mask, classifier, recognizer, scaling_dat
   rec_names   = recognizer.PredictorNames;
 
   labels = zeros(1, num_labels);
-  
-  % Avvio automatico del pool se serve
+
   if parallelize && isempty(gcp('nocreate'))
     parpool;
   end
@@ -55,6 +60,29 @@ function pred = classify_multiple(img, mask, classifier, recognizer, scaling_dat
   % Ricostruzione maschera finale
   for i = 1:num_labels
     pred(comps == i) = labels(i);
+  end
+
+  % Calcolo accuracy e confusion matrix se disponibili le label
+  acc = [];
+  cm  = [];
+  if ~isempty(options.labels)
+    true_labels = zeros(1, num_labels);
+    for i = 1:num_labels
+      region_pixels = options.labels(comps == i);
+      region_pixels = region_pixels(region_pixels > 0);  % ignora background
+      if isempty(region_pixels)
+        true_labels(i) = 0;
+      else
+        true_labels(i) = mode(region_pixels);
+      end
+    end
+
+    valid_idx = true_labels > 0;
+    true_valid = true_labels(valid_idx);
+    pred_valid = labels(valid_idx);
+
+    acc = mean(true_valid == pred_valid);
+    cm  = confusionmat(true_valid, pred_valid);
   end
 end
 
