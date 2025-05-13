@@ -1,8 +1,8 @@
-function acc = test_classify_multiple(classifier, recognizer, scaling_data, options)
+function acc = test_classify_multiple(classifier, detector, scaling_data, options)
 %TEST_CLASSIFY_MULTIPLE Classifica oggetti in più immagini usando classificatore e riconoscitore.
   arguments
     classifier
-    recognizer
+    detector
     scaling_data
     options.directory (1,:) string = "dataset/03_classes"
     options.standardize (1,1) logical = true
@@ -22,7 +22,7 @@ function acc = test_classify_multiple(classifier, recognizer, scaling_data, opti
     mask = imread(masks{i});
     label = load(labels{i}).labeledImage;
 
-    pred = classify_multiple(img, mask, classifier, recognizer, scaling_data, standardize=true, parallelize=options.parallelize);
+    pred = classify_multiple(img, mask, classifier, detector, scaling_data, standardize=true, parallelize=options.parallelize);
 
     confmat = confusionmat(label(:), pred(:));
     if options.visualize_predictions

@@ -6,7 +6,7 @@ img = imread("dataset/06_unknown_miscs/images/unknown_03.jpg");
 mask = imread("dataset/06_unknown_miscs/masks/unknown_03_mask.png");
 labels = load("dataset/06_unknown_miscs/labels/unknown_03_label.mat").labeledImage;
 
-is_leaf = train_leaf_recognizer(training_data);
+is_leaf = train_leaf_detector(training_data);
 
 [comps, num_labels] = bwlabel(mask);
 pred = zeros(size(mask));

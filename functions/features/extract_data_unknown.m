@@ -75,6 +75,3 @@ function [training_data_unknown, testing_data_unknown] = extract_data_unknown(cl
     save("data/data_unknown.mat", "training_data_unknown", "testing_data_unknown");
   end
 end
-
-
-

@@ -46,10 +46,10 @@ fprintf("classifier accuracy on test_set: %.2f%%\n", test_accuracy * 100);
 %% detector 
 if load_detector
   fprintf("loading detector...\n");
-  detector = load("data/recognizer.mat", "recognizer").recognizer;
+  detector = load("data/detector.mat", "detector").detector;
 else
   fprintf("training leaf detector...\n");
-  detector = test_svm_recognizer(sub_training_data, sub_testing_data, feature_number=0, saveFlag=false);
+  detector = test_svm_detector(sub_training_data, sub_testing_data, feature_number=0, saveFlag=false);
 end
 
 %% testing on more images

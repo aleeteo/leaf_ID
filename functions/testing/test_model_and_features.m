@@ -1,4 +1,4 @@
-function [classifier, recognizer, scaling_data] = test_model_and_features(varargin)
+function [classifier, detector, scaling_data] = test_model_and_features(varargin)
   % input handling
   % if nargin < 2
   %   error('Not enough input arguments. Provide training and testing data.');
@@ -21,7 +21,7 @@ function [classifier, recognizer, scaling_data] = test_model_and_features(vararg
   [classifier, test_accuracy] = test_svm(training_data, testing_data, feature_number, saveFlag);
   misc_accuracy = test_accuracy;
   unknown_accuracy = test_accuracy;
-  recognizer = test_svm_recognizer(training_data, testing_data, feature_number, false);
+  detector = test_svm_detector(training_data, testing_data, feature_number, false);
 
   disp(["accuracy on test set: " num2str(test_accuracy)]);
   disp(["accuracy on misc set: " num2str(misc_accuracy)]);

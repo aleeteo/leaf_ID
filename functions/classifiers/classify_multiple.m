@@ -1,13 +1,13 @@
-function [pred, acc, cm] = classify_multiple(img, mask, classifier, recognizer, scaling_data, options)
+function [pred, acc, cm] = classify_multiple(img, mask, classifier, detector, scaling_data, options)
 %CLASSIFY_MULTIPLE Classifica gli oggetti segmentati in un'immagine.
 %
-%   [pred, acc, cm] = classify_multiple(img, mask, classifier, recognizer, scaling_data, options)
+%   [pred, acc, cm] = classify_multiple(img, mask, classifier, detector, scaling_data, options)
 %
 %   INPUT:
 %     img         - Immagine RGB (uint8)
 %     mask        - Maschera binaria con oggetti segmentati
 %     classifier  - Modello di classificazione finale
-%     recognizer  - Modello di riconoscimento (es. unknowns)
+%     detector  - Modello di riconoscimento (es. unknowns)
 %     scaling_data- Struct con parametri di normalizzazione o standardizzazione
 %     options     - Struttura con campi opzionali:
 %         .labels        - Matrice di label ground truth (stessa size di img/mask)
@@ -23,7 +23,7 @@ function [pred, acc, cm] = classify_multiple(img, mask, classifier, recognizer, 
     img (:, :, 3) uint8
     mask (:, :) logical
     classifier
-    recognizer
+    detector
     scaling_data
     options.labels (:,:) = []
     options.standardize (1,1) logical = true
@@ -37,7 +37,7 @@ function [pred, acc, cm] = classify_multiple(img, mask, classifier, recognizer, 
   pred = zeros(size(mask));
 
   class_names = classifier.PredictorNames;
-  rec_names   = recognizer.PredictorNames;
+  rec_names   = detector.PredictorNames;
 
   labels = zeros(1, num_labels);
 
@@ -48,12 +48,12 @@ function [pred, acc, cm] = classify_multiple(img, mask, classifier, recognizer, 
   if parallelize
     parfor i = 1:num_labels
       item_mask = comps == i;
-      labels(i) = classify_object(img, item_mask, classifier, recognizer, class_names, rec_names, scaling_data, standardize);
+      labels(i) = classify_object(img, item_mask, classifier, detector, class_names, rec_names, scaling_data, standardize);
     end
   else
     for i = 1:num_labels
       item_mask = comps == i;
-      labels(i) = classify_object(img, item_mask, classifier, recognizer, class_names, rec_names, scaling_data, standardize);
+      labels(i) = classify_object(img, item_mask, classifier, detector, class_names, rec_names, scaling_data, standardize);
     end
   end
 
@@ -86,7 +86,7 @@ function [pred, acc, cm] = classify_multiple(img, mask, classifier, recognizer, 
   end
 end
 
-function label = classify_object(img, item_mask, classifier, recognizer, class_names, rec_names, scaling_data, standardize)
+function label = classify_object(img, item_mask, classifier, detector, class_names, rec_names, scaling_data, standardize)
 %CLASSIFY_OBJECT Classifica un singolo oggetto usando riconoscitore e classificatore
 
   desc = compute_descriptors(img, item_mask);
@@ -98,7 +98,7 @@ function label = classify_object(img, item_mask, classifier, recognizer, class_n
 
   % Fase 1: riconoscimento unknown
   rec_features = desc(:, rec_names);
-  [rec_pred, ~] = predict(recognizer, rec_features);
+  [rec_pred, ~] = predict(detector, rec_features);
 
   if rec_pred == -1
     label = 11;  % unknown
