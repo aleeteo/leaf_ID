@@ -24,7 +24,7 @@ if load_bestIdx
   bestIdx = load("data/selected_features.mat", "bestSet").bestSet;
 else
   fprintf("selecting features...\n");
-  bestIdx = selectFeatLog(training_data, "Label", Verbose=false);
+  bestIdx = select_best_features(training_data, "Label", Verbose=false);
 end
 
 sub_training_data = training_data(:, [1 bestIdx]);

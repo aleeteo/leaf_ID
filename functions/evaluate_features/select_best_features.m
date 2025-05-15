@@ -1,46 +1,44 @@
-function bestSet = selectFeatLog(data, labelVar, opts)
+function bestSet = select_best_features(data, labelVar, opts)
 %SELECTFEATLOG  Selezione ricorsiva di feature con pruning per correlazione
 %
-%   bestSet = selectFeatLog(dataTbl, "Label", ...
-%                MinFeat = 10,               ...
-%                RhoMax  = 0.90,             ...
-%                Importanza = "mrmrRank",    ...  % o "oobPermuted"
-%                Classifier = @(X,Y)fitcknn(X,Y,'NumNeighbors',3), ...
-%                Verbose = true)
+%   bestSet = select_best_features(dataTbl, "Label", ...
+%                NumFeatRange = [10, 40],      ...
+%                RhoMax       = 0.90,          ...
+%                Importanza   = "mrmrRank",    ...  % o "oobPermuted"
+%                Classifier   = @(X,Y)fitcknn(X,Y,'NumNeighbors',3), ...
+%                Verbose      = true)
 %
 % INPUT
 %   dataTbl   : tabella (una colonna categorical = etichetta)
 %   labelVar  : nome o indice della colonna etichetta
 %
 % OPZIONI (in struttura opts)
-%   MinFeat   : arresta la selezione quando restano queste feature          (default 10)
-%   RhoMax    : soglia di correlazione oltre cui due feature sono considerate ridondanti (default 0.90)
-%   Importanza: "mrmrRank" (default) | "oobPermuted"
-%   Classifier: function handle che restituisce un classificatore MATLAB    (default k-NN con 3 vicini)
-%   CV        : oggetto cvpartition per validazione incrociata              (default 5-fold stratificata)
-%   Verbose   : se true, stampa i messaggi di log a console
+%   NumFeatRange: [min,max] numero feature da selezionare          (default [10, inf])
+%   RhoMax      : soglia di correlazione oltre cui due feature sono considerate ridondanti (default 0.90)
+%   Importanza  : "mrmrRank" (default) | "oobPermuted"
+%   Classifier  : function handle che restituisce un classificatore MATLAB    (default k-NN con 3 vicini)
+%   CV          : oggetto cvpartition per validazione incrociata              (default 5-fold stratificata)
+%   Verbose     : se true, stampa i messaggi di log a console
 %
 % OUTPUT
 %   bestSet   : indici (colonne) delle feature selezionate, riferiti alla tabella originale
 %
-% DESCRIZIONE
-%   Applica una forma di Recursive Feature Elimination (RFE) guidata da
-%   validazione incrociata, con ranking iniziale tramite mRMR e pruning
-%   opzionale di feature fortemente correlate. Alla fine restituisce il
-%   sottoinsieme di feature con migliore performance CV.
-%
 % RICHIEDE: Statistics and Machine Learning Toolbox
+
   arguments
     data              table
     labelVar
-    opts.MinFeat   (1,1) double  {mustBeInteger, mustBeNonnegative} = 10
-    opts.RhoMax    (1,1) double  {mustBePositive, mustBeLessThan(opts.RhoMax,1)} = 0.90
-    opts.Verbose   (1,1) logical = true
-    opts.Classifier           function_handle = @(X,Y) fitcknn(X,Y,'NumNeighbors',3)
-    opts.CV                   = cvpartition(height(data),'KFold',5)
-    opts.Importanza (1,1) string {mustBeMember(opts.Importanza,["mrmrRank","oobPermuted"])} = "mrmrRank"
-    opts.saveFlag (1,1) logical = false
+    opts.NumFeatRange (1,2) double {mustBeNonnegative, mustBeIncreasing} = [10, inf]
+    opts.RhoMax       (1,1) double  {mustBePositive, mustBeLessThan(opts.RhoMax,1)} = 0.90
+    opts.Verbose      (1,1) logical = true
+    opts.Classifier   function_handle = @(X,Y) fitcknn(X,Y,'NumNeighbors',3)
+    opts.CV           = cvpartition(height(data),'KFold',5)
+    opts.Importanza   (1,1) string {mustBeMember(opts.Importanza,["mrmrRank","oobPermuted"])} = "mrmrRank"
+    opts.saveFlag     (1,1) logical = false
   end
+
+  minFeat = opts.NumFeatRange(1);
+  maxFeat = opts.NumFeatRange(2);
 
   %% 1. separa label & feature
   if isnumeric(labelVar)
@@ -57,10 +55,16 @@ function bestSet = selectFeatLog(data, labelVar, opts)
   %% 2. ranking iniziale mRMR
   [rankInit, scoreInit] = fscmrmr(X, y);
 
-  %% 3. pruning per correlazione (facoltativo)
+  %% 3. pruning per correlazione
   if opts.RhoMax < 1
     rankInit = pruneCorrelatedByMRMR(X, rankInit, scoreInit, opts.RhoMax);
   end
+
+  % Taglio a MaxFeat iniziale, se necessario
+  if isfinite(maxFeat) && numel(rankInit) > maxFeat
+    rankInit = rankInit(1:maxFeat);
+  end
+
   currentSet = rankInit;
 
   if opts.Verbose
@@ -73,7 +77,7 @@ function bestSet = selectFeatLog(data, labelVar, opts)
   bestLoss = inf;
   bestSet = currentSet;
 
-  while numel(currentSet) >= opts.MinFeat
+  while numel(currentSet) >= minFeat && numel(currentSet) <= maxFeat
     step = step + 1;
 
     mdl   = opts.Classifier(X(:,currentSet), y);
@@ -88,7 +92,9 @@ function bestSet = selectFeatLog(data, labelVar, opts)
     if opts.Verbose
         fprintf('Iter %02d | %2d feat | CV-loss %.4f\n', step, numel(currentSet), loss);
     end
-    if numel(currentSet) == opts.MinFeat, break, end
+    if numel(currentSet) == minFeat
+      break
+    end
 
     switch opts.Importanza
       case "oobPermuted"
@@ -114,7 +120,7 @@ function bestSet = selectFeatLog(data, labelVar, opts)
   %% 5. mappa sugli indici originali
   bestSet = featCols(bestSet);
 
-  %% 6. opzionale: salva i risultati
+  %% 6. salva
   if opts.saveFlag
     save('data/selected_features.mat', 'bestSet');
     fprintf('Feature selezionate salvate in data/sel_features.mat\n');
@@ -139,5 +145,6 @@ function keptIdx = pruneCorrelatedByMRMR(X, idx, score, rhoThr)
   end
   keptIdx = idx(keep);
 end
+
 
 
