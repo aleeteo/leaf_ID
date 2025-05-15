@@ -28,7 +28,7 @@ function bestSet = select_best_features(data, labelVar, opts)
   arguments
     data              table
     labelVar
-    opts.NumFeatRange (1,2) double {mustBeNonnegative, mustBeIncreasing} = [10, inf]
+    opts.NumFeatRange (1,2) double {mustBeNonnegative} = [10, inf]
     opts.RhoMax       (1,1) double  {mustBePositive, mustBeLessThan(opts.RhoMax,1)} = 0.90
     opts.Verbose      (1,1) logical = true
     opts.Classifier   function_handle = @(X,Y) fitcknn(X,Y,'NumNeighbors',3)
@@ -39,6 +39,9 @@ function bestSet = select_best_features(data, labelVar, opts)
 
   minFeat = opts.NumFeatRange(1);
   maxFeat = opts.NumFeatRange(2);
+  if minFeat > maxFeat
+    error('NumFeatRange: il minimo non può essere maggiore del massimo.');
+  end
 
   %% 1. separa label & feature
   if isnumeric(labelVar)
