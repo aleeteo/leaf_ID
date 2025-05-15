@@ -17,15 +17,15 @@ function [training_data, testing_data, scaling_data, training_data_unknown, test
 %           .parallelize   : (bool, default true) abilita la parallelizzazione su più core
 %
 %   OUTPUT:
-%       training_data - Tabella con le feature delle prime 10 maschere/class
-%       testing_data  - Tabella con le feature delle restanti maschere/class
+%       training_data - Tabella con le feature delle maschere di training per ogni classe
+%       testing_data  - Tabella con le feature delle maschere di testing per ogni classe
 %       scaling_data  - Struct con min/max (o mean/std) per normalizzazione o standardizzazione
 %       training_data_unknown - Tabella con le feature degli oggetti sconosciuti
 %       testing_data_unknown  - Tabella con le feature degli oggetti sconosciuti
 %
 %   NOTE:
-%       - Ogni classe deve avere almeno 10 maschere.
-%       - Le maschere vengono randomizzate per ridurre l’overfitting.
+%       - Ogni classe deve avere un numero sufficiente di maschere in modo che, alla riga corrispondente di
+%         test_indexes, gli indici di test siano compresi nel numero totale delle maschere.
 %       - La parallelizzazione viene gestita internamente e può essere disabilitata.
 %       - I dati vengono salvati automaticamente se saveFlag è true.
 
@@ -60,16 +60,28 @@ function [training_data, testing_data, scaling_data, training_data_unknown, test
     fprintf('Controllo maschere...\n');
   end
 
-  % Controllo maschere
+  % Matrice di indici per i test (ogni riga corrisponde ad una classe)
+  test_indexes = [1,2,5,8,10;...
+                  2,3,6,8,11;...
+                  1,5,8,9,11;...
+                  1,4,6,14,15;...
+                  4,5,8,10,12;...
+                  2,5,8,9,15;...
+                  2,4,5,7,11;...
+                  2,4,8,9,10;...
+                  2,7,8,10,11;...
+                  2,3,5,6,17];
+
+  % Controllo che ogni classe abbia sufficienti maschere.
   for iClass = 1:nClasses
-    if numel(class_struct(iClass).masks) < 10
-      error('La classe %d ha solo %d maschere, ne servono almeno 10.', ...
-          iClass, numel(class_struct(iClass).masks));
+    if numel(class_struct(iClass).masks) < max(test_indexes(iClass,:))
+      error('La classe %d ha solo %d maschere, mentre sono richiesti almeno %d in base a test_indexes.', ...
+          iClass, numel(class_struct(iClass).masks), max(test_indexes(iClass,:)));
     end
   end
 
   if doLog
-    fprintf('Tutte le classi hanno almeno 10 maschere.\n');
+    fprintf('Tutte le classi hanno le maschere necessarie.\n');
     fprintf('Inizio estrazione feature...\n');
   end
 
@@ -85,10 +97,12 @@ function [training_data, testing_data, scaling_data, training_data_unknown, test
     masks  = class_struct(iClass).masks;
     label  = class_struct(iClass).label;
 
-    idx = randperm(numel(masks));  % Randomizzazione
+    % Definizione indici per il testing e il training
+    test_idx  = test_indexes(iClass, :);
+    train_idx = setdiff(1:numel(masks), test_idx);
 
-    % --- Training ---
-    nTrain = 10;
+    % --- Estrazione per Training ---
+    nTrain = numel(train_idx);
     tmpTrain = cell(1, nTrain);
 
     if doParallel
@@ -97,39 +111,37 @@ function [training_data, testing_data, scaling_data, training_data_unknown, test
       afterEach(dq, @(~) updater());
 
       parfor j = 1:nTrain
-        tmpTrain{j} = compute_descriptors(img, masks{idx(j)}, label);
+        tmpTrain{j} = compute_descriptors(img, masks{ train_idx(j) }, label);
         send(dq, j);
       end
     else
       for j = 1:nTrain
-        tmpTrain{j} = compute_descriptors(img, masks{idx(j)}, label);
+        tmpTrain{j} = compute_descriptors(img, masks{ train_idx(j) }, label);
       end
     end
 
     trainTables = [trainTables, tmpTrain];
 
-    % --- Testing ---
-    nTest = numel(masks) - nTrain;
-    if nTest > 0
-      tmpTest = cell(1, nTest);
+    % --- Estrazione per Testing ---
+    nTest = numel(test_idx);
+    tmpTest = cell(1, nTest);
 
-      if doParallel
-        dq = parallel.pool.DataQueue;
-        updater = createProgressBar(nTest, sprintf('Classe %d - Testing', iClass));
-        afterEach(dq, @(~) updater());
+    if doParallel
+      dq = parallel.pool.DataQueue;
+      updater = createProgressBar(nTest, sprintf('Classe %d - Testing', iClass));
+      afterEach(dq, @(~) updater());
 
-        parfor j = 1:nTest
-          tmpTest{j} = compute_descriptors(img, masks{idx(j + nTrain)}, label);
-          send(dq, j);
-        end
-      else
-        for j = 1:nTest
-          tmpTest{j} = compute_descriptors(img, masks{idx(j + nTrain)}, label);
-        end
+      parfor j = 1:nTest
+        tmpTest{j} = compute_descriptors(img, masks{ test_idx(j) }, label);
+        send(dq, j);
       end
-
-      testTables = [testTables, tmpTest];
+    else
+      for j = 1:nTest
+        tmpTest{j} = compute_descriptors(img, masks{ test_idx(j) }, label);
+      end
     end
+
+    testTables = [testTables, tmpTest];
   end
 
   % Costruzione tabelle finali
