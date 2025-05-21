@@ -1,0 +1,39 @@
+function [mediaacc]=accuracy_final(inputFolder, foldergt, threshold)
+%--------------------------------------------------------------------------------
+    % Controlla se la cartella di input esiste
+    if ~isfolder(inputFolder)
+        error('La cartella di input non esiste: %s', inputFolder);
+    end
+    % Estensioni supportate
+    imageExtensions = {'*.jpg', '*.png', '*.bmp', '*.tif'};
+
+    media=0;
+    
+    %controlla se la threshold è diversa da 0
+    if threshold==0
+        error('La soglia non può essere nulla');
+    end
+%--------------------------------------------------------------------------------
+%ciclo su ogni file per applicare segmentatore e tirare fuori accuracy    
+
+for k = 1:length(files)
+        % Costruisci il percorso completo del file
+        filepath = fullfile(files(k).folder, files(k).name);
+        
+        % Carica i dati dal file
+        dati = load(filepath);
+        
+        % Applica la funzione segmentation5
+        mask = segmentation5(dati);
+        
+        % Salva la variabile mask in un nuovo file
+        [~, nomefile, ~] = fileparts(files(k).name);
+        save(fullfile(cartella, [nomefile, '_mask.mat']), 'mask');
+        
+        disp(['Elaborato: ', files(k).name]);
+    end
+
+       
+%--------------------------------------------------------------------------------
+
+end

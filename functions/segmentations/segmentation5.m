@@ -1,4 +1,8 @@
-function mask = segmentation5(img)
+function mask = segmentation5(img, threshold)
+arguments    
+img(:,:,:)
+threshold(1,1) {mustBeNumeric}=18
+end
     fprintf('Inizio a segmentare questa immagine \n');
 
     if size(img, 3) ~= 3
@@ -17,7 +21,7 @@ function mask = segmentation5(img)
     seed_b = mean(b(1:10,1:10), 'all');
     seed_color = [seed_L, seed_a, seed_b];
 
-    threshold = 18;  % leggermente più alto se includi L
+     
 
     [rows, cols] = size(L);
     visited = false(rows, cols);
