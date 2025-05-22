@@ -19,45 +19,50 @@ function [mediaacc] = accuracy_final(inputFolder, foldergt, threshold)
         error('La soglia non può essere nulla');
     end
 
-    % Ciclo su ogni estensione di file supportata
+    % Ottieni l'elenco dei file nella cartella di input
+    files = [];
     for ext = imageExtensions
-        % Ottieni l'elenco dei file nella cartella di input con l'estensione corrente
-        files = dir(fullfile(inputFolder, ext{1}));
+        files = [files; dir(fullfile(inputFolder, ext{1}))];
+    end
 
-        % Verifica se sono stati trovati file
-        if ~isempty(files)
-            % Ciclo su ogni file
-            for k = 1:length(files)
-                % Costruisci il percorso completo del file
-                imagePath = fullfile(files(k).folder, files(k).name);
-                img = imread(imagePath);
+    disp("fino a qui ok");
 
-                % Applica la funzione segmentation5
-                mask = segmentation5(img, threshold);
+    % Verifica se sono stati trovati file
+    if isempty(files)
+        disp('Nessun file trovato nella cartella di input.');
+        return;
+    end
 
-                % Costruisci il percorso del file ground truth corrispondente
-                gtPath = fullfile(foldergt, files(k).name);
+    % Ciclo su ogni file
+    for k = 1:length(files)
+        % Costruisci il percorso completo del file
+        imagePath = fullfile(files(k).folder, files(k).name);
+        img = imread(imagePath);
 
-                % Verifica se il file ground truth esiste
-                if isfile(gtPath)
-                    % Carica il ground truth
-                    gt = imread(gtPath);
+        % Applica la funzione segmentation5
+        mask = segmentation5(img, threshold);
 
-                    % Verifica che le dimensioni delle immagini corrispondano
-                    if ~isequal(size(mask), size(gt))
-                        warning('Le dimensioni di %s e %s non corrispondono. Immagini saltate.', files(k).name, gtPath);
-                        continue;
-                    end
+        % Costruisci il nome del file ground truth corrispondente
+        [~, name, ~] = fileparts(files(k).name);
+        gtPath = fullfile(foldergt, [name, '.png']);
 
-                    % Calcola l'accuratezza
-                    acc = sum(mask(:) == gt(:)) / numel(mask);
-                    media = media + acc;
-                    numFiles = numFiles + 1;
-                    disp(['Elaborato: ', files(k).name, ' - Accuratezza: ', num2str(acc)]);
-                else
-                    disp(['File ground truth mancante per: ', files(k).name]);
-                end
+        % Verifica se il file ground truth esiste
+        if isfile(gtPath)
+            % Carica il ground truth
+            gt = imread(gtPath);
+
+            % Verifica che le dimensioni delle immagini corrispondano
+            if isequal(size(mask), size(gt))
+                % Calcola l'accuratezza
+                acc = sum(mask(:) == gt(:)) / numel(mask);
+                media = media + acc;
+                numFiles = numFiles + 1;
+                disp(['Elaborato: ', files(k).name, ' - Accuratezza: ', num2str(acc)]);
+            else
+                warning('Le dimensioni di %s e %s non corrispondono. Immagini saltate.', files(k).name, gtPath);
             end
+        else
+            disp(['File ground truth mancante per: ', files(k).name]);
         end
     end
 
@@ -70,3 +75,4 @@ function [mediaacc] = accuracy_final(inputFolder, foldergt, threshold)
         mediaacc = NaN;
     end
 end
+
