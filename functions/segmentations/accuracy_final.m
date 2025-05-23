@@ -1,4 +1,5 @@
 function [mediaacc] = accuracy_final(inputFolder, foldergt, threshold)
+    %Check di controllo Necessari-------------------------------
     % Controlla se la cartella di input esiste
     if ~isfolder(inputFolder)
         error('La cartella di input non esiste: %s', inputFolder);
@@ -8,22 +9,21 @@ function [mediaacc] = accuracy_final(inputFolder, foldergt, threshold)
     if ~isfolder(foldergt)
         error('La cartella di ground truth non esiste: %s', foldergt);
     end
-
+    % Controlla se la threshold è diversa da 0
+    if threshold == 0
+        error('La soglia non può essere nulla');
+    end
+    %-----------------------------------------------------------
+    
     % Estensioni supportate
     imageExtensions = {'*.jpg', '*.png', '*.bmp', '*.tif'};
     media = 0;
     numFiles = 0;
 
-    % Controlla se la threshold è diversa da 0
-    if threshold == 0
-        error('La soglia non può essere nulla');
-    end
+    
 
     % Ottieni l'elenco dei file nella cartella di input
-    files = [];
-    for ext = imageExtensions
-        files = [files; dir(fullfile(inputFolder, ext{1}))];
-    end
+    files = getFilePaths(inputFolder);
 
     disp("fino a qui ok");
 
@@ -32,19 +32,25 @@ function [mediaacc] = accuracy_final(inputFolder, foldergt, threshold)
         disp('Nessun file trovato nella cartella di input.');
         return;
     end
+    %ottieni elenco file gt
+    filesGT=getFilePaths(foldergt);
+
+
+
+
+
 
     % Ciclo su ogni file
     for k = 1:length(files)
         % Costruisci il percorso completo del file
-        imagePath = fullfile(files(k).folder, files(k).name);
+        imagePath = files(k);
         img = imread(imagePath);
 
         % Applica la funzione segmentation5
         mask = segmentation5(img, threshold);
 
         % Costruisci il nome del file ground truth corrispondente
-        [~, name, ~] = fileparts(files(k).name);
-        gtPath = fullfile(foldergt, [name, '.png']);
+        gtPath = filesGT(k);
 
         % Verifica se il file ground truth esiste
         if isfile(gtPath)

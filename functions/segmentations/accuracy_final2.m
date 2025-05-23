@@ -1,69 +1,68 @@
 function [mediaacc] = accuracy_final2(inputFolder, foldergt, threshold)
-    % Controlla se la cartella di input esiste
+    % Verifiche iniziali
     if ~isfolder(inputFolder)
         error('La cartella di input non esiste: %s', inputFolder);
     end
 
-    % Controlla se la cartella di ground truth esiste
     if ~isfolder(foldergt)
         error('La cartella di ground truth non esiste: %s', foldergt);
     end
 
-    % Estensioni supportate
-    imageExtensions = {'*.jpg', '*.png', '*.bmp', '*.tif'};
-    media = 0;
-    numFiles = 0;
-
-    % Controlla se la threshold è diversa da 0
     if threshold == 0
         error('La soglia non può essere nulla');
     end
 
-    % Ciclo su ogni estensione di file supportata
-    for ext = imageExtensions
-        % Ottieni l'elenco dei file nella cartella di input con l'estensione corrente
-        files = dir(fullfile(inputFolder, ext{1}));
+    % Inizializzazione variabili
+    media = 0;
+    numFiles = 0;
 
-        % Verifica se sono stati trovati file
-        if ~isempty(files)
-            % Ciclo su ogni file
-            for k = 1:length(files)
-                % Costruisci il percorso completo del file
-                imagePath = fullfile(files(k).folder, files(k).name);
-                img = imread(imagePath);
+    % Ottieni i path completi dei file di input e ground truth
+    filesInput = getFilePaths(inputFolder);
+    filesGT = getFilePaths(foldergt);
 
-                % Applica la funzione segmentation5
-                mask = segmentation5(img, threshold);
+    % Crea mappa nome base → path ground truth
+    gtMap = containers.Map();
+    for i = 1:length(filesGT)
+    [~, name, ~] = fileparts(filesGT{i});
+    
+    % Rimuovi il suffisso '_mask' se presente
+    if endsWith(name, '_mask')
+        name = extractBefore(name, '_mask');
+    end
 
-                % Costruisci il percorso del file ground truth corrispondente
-                gtPath = fullfile(foldergt, files(k).name);
+    gtMap(name) = filesGT{i};
+end
 
-                % Verifica se il file ground truth esiste
-                 
-                if isfile(gtPath)
-                    % Carica il ground truth
-                    gt = imread(gtPath);
 
-                    % Verifica che le dimensioni delle immagini corrispondano
-                    if ~isequal(size(mask), size(gt))
-                        warning('Le dimensioni di %s e %s non corrispondono. Immagini saltate.', files(k).name, gtPath);
-                        continue;
-                    end
+    % Cicla su ogni file di input
+    for k = 1:length(filesInput)
+        imagePath = filesInput{k};
+        [~, name, ~] = fileparts(imagePath);
 
-                    % Calcola l'accuratezza
-                    acc = sum(mask(:) == gt(:)) / numel(mask);
-                    media = media + acc;
-                    numFiles = numFiles + 1;
-                    disp(['Elaborato: ', files(k).name, ' - Accuratezza: ', num2str(acc)]);
-                else
-                    disp(['Verificando: ', gtPath]);
-                    disp(['File ground truth mancante per: ', files(k).name]);
-                end
+        % Verifica se esiste il GT corrispondente
+        if isKey(gtMap, name)
+            img = imread(imagePath);
+            gt = imread(gtMap(name));
+
+            % Applica la funzione di segmentazione
+            mask = segmentation5(img, threshold);
+
+            % Controlla che le dimensioni corrispondano
+            if isequal(size(mask), size(gt))
+                % Calcola accuratezza
+                acc = sum(logical(mask(:)) == logical(gt(:))) / numel(mask);
+                media = media + acc;
+                numFiles = numFiles + 1;
+                disp(['Elaborato: ', name, ' - Accuratezza: ', num2str(acc)]);
+            else
+                warning('Dimensioni non corrispondenti: %s vs %s. Saltato.', imagePath, gtMap(name));
             end
+        else
+            disp(['Ground truth mancante per: ', name]);
         end
     end
 
-    % Calcola la media delle accuratezze
+    % Calcolo media finale
     if numFiles > 0
         mediaacc = media / numFiles;
         disp(['Accuratezza media: ', num2str(mediaacc)]);
