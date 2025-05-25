@@ -11,10 +11,10 @@ function [training_data, testing_data, scaling_data, training_data_unknown, test
 %           .label : etichetta della classe
 %
 %       options - Struttura con campi:
-%           .saveFlag      : (bool, default false) se true, salva i dati su file MAT
+%           .SaveFlag      : (bool, default false) se true, salva i dati su file MAT
 %           .standardize   : (bool, default false) se true, usa z-score invece di [0,1]
 %           .log           : (bool, default false) stampa messaggi di log
-%           .parallelize   : (bool, default true) abilita la parallelizzazione su più core
+%           .DoParallel   : (bool, default true) abilita la parallelizzazione su più core
 %
 %   OUTPUT:
 %       training_data - Tabella con le feature delle maschere di training per ogni classe
@@ -27,20 +27,20 @@ function [training_data, testing_data, scaling_data, training_data_unknown, test
 %       - Ogni classe deve avere un numero sufficiente di maschere in modo che, alla riga corrispondente di
 %         test_indexes, gli indici di test siano compresi nel numero totale delle maschere.
 %       - La parallelizzazione viene gestita internamente e può essere disabilitata.
-%       - I dati vengono salvati automaticamente se saveFlag è true.
+%       - I dati vengono salvati automaticamente se SaveFlag è true.
 
   arguments
     class_struct struct
     unknown_struct struct
-    options.saveFlag (1,1) logical = false
-    options.standardize (1,1) logical = true
+    options.SaveFlag (1,1) logical = false
+    options.Scaling (1,1) string {mustBeMember(options.Scaling, ["standardize", "normalize", "none"])} = "standardize"
     options.log (1,1) logical = false
-    options.parallelize (1,1) logical = true
+    options.DoParallel (1,1) logical = true
   end
 
-  saveFlag     = options.saveFlag;
+  SaveFlag     = options.SaveFlag;
   doLog        = options.log;
-  doParallel   = options.parallelize;
+  doParallel   = options.DoParallel;
   nClasses     = numel(class_struct);
 
   % Avvio automatico del pool se serve
@@ -53,8 +53,8 @@ function [training_data, testing_data, scaling_data, training_data_unknown, test
 
   if doLog
     fprintf('Log attivato.\n');
-    fprintf('saveFlag: %d\n', saveFlag);
-    fprintf('Standardizzazione con z-score: %d\n', options.standardize);
+    fprintf('SaveFlag: %d\n', SaveFlag);
+    fprintf('Tipo di scaling: %s\n', options.Scaling);
     fprintf('Parallelizzazione attiva: %d\n', doParallel);
     fprintf('Numero di classi: %d\n', nClasses);
     fprintf('Controllo maschere...\n');
@@ -149,18 +149,28 @@ function [training_data, testing_data, scaling_data, training_data_unknown, test
   testing_data  = vertcat(testTables{:});
 
   % Normalizzazione o standardizzazione
-  if options.standardize
-    [training_data, scaling_data] = standardize_features(training_data);
-    testing_data = standardize_features(testing_data, scaling_data);
-  else
-    [training_data, scaling_data] = normalize_features(training_data);
-    testing_data = normalize_features(testing_data, scaling_data);
+  switch options.Scaling
+    case "standardize"
+      [training_data, scaling_data] = standardize_features(training_data);
+      testing_data = standardize_features(testing_data, scaling_data);
+    case "normalize"
+      [training_data, scaling_data] = normalize_features(training_data);
+      testing_data = normalize_features(testing_data, scaling_data);
+    case "none"
+      % Crea una tabella vuota con stesse colonne del dataset (escluse le label)
+      if iscategorical(training_data{:,1})
+          featNames = training_data.Properties.VariableNames(2:end);
+      else
+          featNames = training_data.Properties.VariableNames;
+      end
+      zeroRow = zeros(1, numel(featNames));
+      scaling_data = array2table([zeroRow; zeroRow], 'VariableNames', featNames);
   end
 
   [training_data_unknown, testing_data_unknown] = extract_data_unknown(unknown_struct, scaling_data, ...
-      saveFlag=false, standardize=options.standardize, log=doLog);
+    SaveFlag=false, scaling=options.Scaling, log=doLog);
 
-  if saveFlag
+  if SaveFlag
     save('data/data.mat', 'training_data', 'testing_data', 'scaling_data', 'training_data_unknown', 'testing_data_unknown');
   end
 end
