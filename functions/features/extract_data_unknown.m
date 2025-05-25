@@ -18,7 +18,7 @@ function [training_data_unknown, testing_data_unknown] = extract_data_unknown(cl
     classes struct
     scaling_data (2,:)
     options.saveFlag (1,1) logical = false
-    options.standardize (1,1) logical = true
+    options.Scaling (1,1) string {mustBeMember(options.Scaling, ["standardize", "normalize", "none"])} = "standardize"
     options.log (1,1) logical = false
   end
 
@@ -63,12 +63,13 @@ function [training_data_unknown, testing_data_unknown] = extract_data_unknown(cl
   training_data_unknown = vertcat(trainTables{:});
   testing_data_unknown  = vertcat(testTables{:});
 
-  if options.standardize
-    training_data_unknown = standardize_features(training_data_unknown, scaling_data);
-    testing_data_unknown = standardize_features(testing_data_unknown, scaling_data);
-  else
-    training_data_unknown = normalize_features(training_data_unknown, scaling_data);
-    testing_data_unknown = normalize_features(testing_data_unknown, scaling_data);
+  switch options.Scaling
+    case "standardize"
+      [training_data_unknown, scaling_data] = standardize_features(training_data_unknown);
+      testing_data_unknown = standardize_features(testing_data_unknown, scaling_data);
+    case "normalize"
+      [training_data_unknown, scaling_data] = normalize_features(training_data_unknown);
+      testing_data_unknown = normalize_features(testing_data_unknown, scaling_data);
   end
 
   if saveFlag
