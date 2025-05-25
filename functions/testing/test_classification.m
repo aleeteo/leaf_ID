@@ -2,9 +2,14 @@ function [classifier, test_accuracy] = test_classification(training_data, testin
   arguments
     training_data table
     testing_data table
-    options.saveFlag (1,1) logical = false
-    options.model (1,1) string {mustBeMember(options.model, ["svm", "tree", "knn", "bayes", "ensamble", "auto"])} = "svm"
+    options.model (1,1) string = "svm"
+    options.SaveFlag (1,1) logical = false
     options.optimize (1,1) {mustBeNumericOrLogical} = false
+  end
+
+  validModels = ["svm", "tree", "knn", "bayes", "ensamble", "auto"];
+  if ~ismember(options.model, validModels)
+      error("Invalid value for 'model'. Must be one of: %s", strjoin(validModels, ", "));
   end
 
   if options.optimize 
@@ -25,7 +30,7 @@ function [classifier, test_accuracy] = test_classification(training_data, testin
     case 'ensamble'
       classifier = fitcensemble(training_data, 'Label', 'Method', 'Bag', 'OptimizeHyperparameters', optimize);
     case 'auto'
-      classifier = fitcauto(training_data, 'Label', 'OptimizeHyperparameters', optimize);
+      classifier = fitcauto(training_data, 'Label', 'OptimizeHyperparameters', 'auto');
     otherwise
       error('Invalid model type. Choose from svm, tree, knn, or bayes.');
   end
@@ -38,7 +43,7 @@ function [classifier, test_accuracy] = test_classification(training_data, testin
   fprintf('F1 Score: %f\n', f1_score);
   confusionchart(abs(confusion_matrix));
 
-  if options.saveFlag
+  if options.SaveFlag
     % Save the model to a file
     modelFileName = 'data/classifier.mat';
     save(modelFileName, 'classifier', 'test_accuracy');
