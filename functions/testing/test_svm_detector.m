@@ -3,11 +3,11 @@ function [detector, confusion_matrix, f1_score] = test_svm_detector(training_dat
     training_data table
     testing_data table
     options.OutlierFraction {mustBeNumeric, mustBePositive} = 0.5
-    options.saveFlag logical = false
+    options.SaveFlag logical = false
   end
 
   % feature_number = options.feature_number;
-  saveFlag = options.saveFlag;
+  SaveFlag = options.SaveFlag;
 
   % Etichette assegnate: tutte le istanze di training sono "leaf"
   training_data.Label = repmat(categorical("leaf"), height(training_data), 1);
@@ -40,7 +40,7 @@ function [detector, confusion_matrix, f1_score] = test_svm_detector(training_dat
   fprintf('F1 Score: %f\n', f1_score);
   confusionchart(confusion_matrix);
 
-  if saveFlag
+  if SaveFlag
     save('data/detector.mat', 'detector');
     fprintf('Modello salvato in data/svm_model_detector.mat\n');
   end

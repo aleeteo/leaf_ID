@@ -4,10 +4,10 @@ function [classifier, detector, scaling_data] = test_model_and_features(varargin
   %   error('Not enough input arguments. Provide training and testing data.');
   % end
   p = inputParser;
-  addParameter(p, 'saveFlag', false, @(x) islogical(x));
+  addParameter(p, 'SaveFlag', false, @(x) islogical(x));
   addParameter(p, 'feature_number', 0, @(x) isnumeric(x) && isscalar(x));
   parse(p, varargin{:});
-  saveFlag = p.Results.saveFlag;
+  SaveFlag = p.Results.SaveFlag;
   feature_number = p.Results.feature_number;
 
   load("data/classes_structs.mat", "classes");
@@ -18,7 +18,7 @@ function [classifier, detector, scaling_data] = test_model_and_features(varargin
 
   % training and testing on test set
   disp("training classifier")
-  [classifier, test_accuracy] = test_svm(training_data, testing_data, feature_number, saveFlag);
+  [classifier, test_accuracy] = test_svm(training_data, testing_data, feature_number, SaveFlag);
   misc_accuracy = test_accuracy;
   unknown_accuracy = test_accuracy;
   detector = test_svm_detector(training_data, testing_data, feature_number, false);

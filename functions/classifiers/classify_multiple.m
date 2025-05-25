@@ -12,7 +12,7 @@ function [pred, acc, cm] = classify_multiple(img, mask, classifier, detector, sc
 %     options     - Struttura con campi opzionali:
 %         .labels        - Matrice di label ground truth (stessa size di img/mask)
 %         .standardize   - true = z-score, false = [0,1] (default: true)
-%         .parallelize   - true = usa parfor, false = for (default: false)
+%         .DoParallel   - true = usa parfor, false = for (default: false)
 %
 %   OUTPUT:
 %     pred - Maschera con le etichette assegnate (interi)
@@ -27,11 +27,11 @@ function [pred, acc, cm] = classify_multiple(img, mask, classifier, detector, sc
     scaling_data
     options.labels (:,:) = []
     options.standardize (1,1) logical = true
-    options.parallelize (1,1) logical = false
+    options.DoParallel (1,1) logical = false
   end
 
   standardize = options.standardize;
-  parallelize = options.parallelize;
+  DoParallel = options.DoParallel;
 
   [comps, num_labels] = bwlabel(mask);
   pred = zeros(size(mask));
@@ -41,11 +41,11 @@ function [pred, acc, cm] = classify_multiple(img, mask, classifier, detector, sc
 
   labels = zeros(1, num_labels);
 
-  if parallelize && isempty(gcp('nocreate'))
+  if DoParallel && isempty(gcp('nocreate'))
     parpool;
   end
 
-  if parallelize
+  if DoParallel
     parfor i = 1:num_labels
       item_mask = comps == i;
       labels(i) = classify_object(img, item_mask, classifier, detector, class_names, rec_names, scaling_data, standardize);
