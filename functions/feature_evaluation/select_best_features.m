@@ -34,7 +34,7 @@ function bestSet = select_best_features(data, labelVar, opts)
     opts.Classifier   function_handle = @(X,Y) fitcknn(X,Y,'NumNeighbors',3)
     opts.CV           = cvpartition(height(data),'KFold',5)
     opts.Importanza   (1,1) string {mustBeMember(opts.Importanza,["mrmrRank","oobPermuted"])} = "mrmrRank"
-    opts.saveFlag     (1,1) logical = false
+    opts.SaveFlag     (1,1) logical = false
   end
 
   minFeat = opts.NumFeatRange(1);
@@ -124,7 +124,7 @@ function bestSet = select_best_features(data, labelVar, opts)
   bestSet = featCols(bestSet);
 
   %% 6. salva
-  if opts.saveFlag
+  if opts.SaveFlag
     save('data/selected_features.mat', 'bestSet');
     fprintf('Feature selezionate salvate in data/sel_features.mat\n');
   end

@@ -8,7 +8,7 @@ function results = test_classify_multiple(classifier, detector, scaling_data, op
     scaling_data
     options.directory (1,:) string = "dataset/03_classes"
     options.standardize (1,1) logical = true
-    options.parallelize (1,1) logical = true
+    options.DoParallel (1,1) logical = true
     options.visualize_predictions (1,1) logical = false
     options.visualize_confmat (1,1) logical = false
   end
@@ -33,7 +33,7 @@ function results = test_classify_multiple(classifier, detector, scaling_data, op
     [pred, instanceAccuracy, cm] = classify_multiple(img, mask, classifier, detector, scaling_data, ...
                       labels=label, ...
                       standardize=options.standardize, ...
-                      parallelize=options.parallelize);
+                      DoParallel=options.DoParallel);
 
     % Accuracy pixel-wise
     correct = sum((label(:) == pred(:)) & (pred(:) ~= 0));

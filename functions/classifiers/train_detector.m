@@ -6,8 +6,9 @@ function [detector, test_accuracy, cm] = train_detector( ...
     testing_data table
     training_data_unknown table
     testing_data_unknown table
-    options.saveFlag logical = false
+    options.SaveFlag logical = false
     options.NumFeatRange (1,2) double {mustBeNonnegative} = [10, inf]
+    options.VisualizeResults logical = false
   end
 
   % Unione dei dati noti e unknown
@@ -17,7 +18,6 @@ function [detector, test_accuracy, cm] = train_detector( ...
   % Conversione delle label in booleano: true = foglia (<=10), false = unknown
   training_data.Label = double(training_data.Label) <= 10;
   testing_data.Label  = double(testing_data.Label)  <= 10;
-  class(training_data.Label(1))
 
   % Selezione delle feature migliori
   bestSet = select_best_features(training_data, 'Label', ...
@@ -38,14 +38,23 @@ function [detector, test_accuracy, cm] = train_detector( ...
   detector = fitcensemble(X, Y, 'Method', 'Bag');
 
   % Predizione e valutazione
-  y_pred = (predict(detector, x_test));
-  y_test = (y_test);
-
+  y_pred = predict(detector, x_test);
   test_accuracy = mean(y_pred == y_test);
   cm = confusionmat(y_test, y_pred);
 
+  % Visualizzazione
+  if options.VisualizeResults
+    figure;
+    heatmap(cm, 'ColorbarVisible', 'on', ...
+            'XLabel', 'Predicted Class', ...
+            'YLabel', 'True Class', ...
+            'Title', 'Confusion Matrix');
+    figure;
+    confusionchart(cm);
+  end
+
   % Salvataggio opzionale
-  if options.saveFlag
+  if options.SaveFlag
     save('data/detector.mat', 'detector', 'test_accuracy');
     fprintf('Modello salvato in data/detector.mat\n');
   end

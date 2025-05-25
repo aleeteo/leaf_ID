@@ -3,10 +3,10 @@ function [classifier, accuracy, feat_names] = test_svm(training_data, testing_da
     training_data table
     testing_data table
     options.feature_number (1,1) double {mustBeNonnegative} = 0
-    options.saveFlag (1,1) logical = false
+    options.SaveFlag (1,1) logical = false
   end
   feature_number = options.feature_number;
-  saveFlag = options.saveFlag;
+  SaveFlag = options.SaveFlag;
 
   if feature_number == 0
     sub_train = training_data;
@@ -30,7 +30,7 @@ function [classifier, accuracy, feat_names] = test_svm(training_data, testing_da
   fprintf('F1 Score: %f\n', f1_score);
   confusionchart(abs(confusion_matrix));
 
-  if saveFlag
+  if SaveFlag
     % Save the model to a file
     modelFileName = 'data/classifier.mat';
     save(modelFileName, 'classifier');

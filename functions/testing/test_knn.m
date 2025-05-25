@@ -4,11 +4,11 @@ function C = test_knn(training_data, testing_data, options)
     testing_data table
     % feature_number double {isinteger} = 25
     % k double {isinteger} = 1
-    % saveFlag logical = false
+    % SaveFlag logical = false
     options.feature_number (1,1) double {mustBeInteger} = 0
     options.k (1,1) double {mustBeInteger} = 1
     options.optimizeHyperparameters logical = true
-    options.saveFlag logical = false
+    options.SaveFlag logical = false
   end
 
   feature_number = options.feature_number;
@@ -18,7 +18,7 @@ function C = test_knn(training_data, testing_data, options)
   else
     optimizeHyperparameters = 'none';
   end
-  saveFlag = options.saveFlag;
+  SaveFlag = options.SaveFlag;
 
   [sub_train, sub_test, feat_names] = select_top_features(training_data, testing_data, feature_number);
   save('data/sel_features.mat', 'feat_names');
@@ -33,7 +33,7 @@ function C = test_knn(training_data, testing_data, options)
   fprintf('F1 Score: %f\n', f1_score);
   confusionchart(abs(confusion_matrix));
 
-  if saveFlag
+  if SaveFlag
     % Save the model to a file
     modelFileName = 'data/knn_model.mat';
     save(modelFileName, 'C');
