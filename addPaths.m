@@ -1,0 +1,11 @@
+addpath("system");
+addpath("functions");
+addpath("functions/classifiers");
+addpath("functions/feature_evaluation");
+addpath("functions/plotting");
+addpath("functions/testing");
+addpath("functions/utility");
+addpath("functions/dataset_creation");
+addpath("functions/features");
+addpath("functions/segmentation");
+savepath;
