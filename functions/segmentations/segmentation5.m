@@ -1,7 +1,7 @@
 function mask = segmentation5(img, threshold)
 arguments    
 img(:,:,:)
-threshold(1,1) {mustBeNumeric}=18
+threshold(1,1) {mustBeNumeric}=21
 end
     fprintf('Inizio a segmentare questa immagine \n');
 
