@@ -1,6 +1,12 @@
-function plot_scaling_accuracy(class_struct, unknown_struct)
+function plot_scaling_accuracy(class_struct, unknown_struct, opts)
 % Valuta e confronta le accuracy di classificazione e riconoscimento
-% per dati raw, normalizzati e standardizzati
+% per dati raw, normalizzati e standardizzati. Salva i dati su CSV se richiesto.
+
+  arguments
+    class_struct
+    unknown_struct
+    opts.SaveData (1,1) logical = false
+  end
 
   % Estrazione dati RAW
   [train_raw, test_raw, ~, train_unk_raw, test_unk_raw] = ...
@@ -59,4 +65,14 @@ function plot_scaling_accuracy(class_struct, unknown_struct)
   ylabel('Accuracy');
   title('Accuracy confronto: Raw vs Normalize vs Standardize');
   grid on;
+
+  % Esportazione dati se richiesto
+  if opts.SaveData
+    if ~exist('plots', 'dir')
+      mkdir('plots');
+    end
+    T = table(labels', classifier_acc', detector_acc', ...
+              'VariableNames', {'Condition', 'Classifier', 'Detector'});
+    writetable(T, fullfile('plots', 'scaling_accuracy.csv'));
+  end
 end
