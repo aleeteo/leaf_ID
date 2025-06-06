@@ -1,6 +1,6 @@
 addpath("system");
 addpath("functions");
-addpath("functions/classifiers");
+addpath("functions/classification");
 addpath("functions/feature_evaluation");
 addpath("functions/plotting");
 addpath("functions/testing");
