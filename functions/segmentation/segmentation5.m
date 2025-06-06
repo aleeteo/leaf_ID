@@ -1,8 +1,9 @@
 function mask = segmentation5(img, threshold)
-arguments    
-img(:,:,:)
-threshold(1,1) {mustBeNumeric}=21
-end
+    arguments    
+      img(:,:,:)
+      threshold(1,1) {mustBeNumeric}=21
+    end
+
     fprintf('Inizio a segmentare questa immagine \n');
 
     if size(img, 3) ~= 3

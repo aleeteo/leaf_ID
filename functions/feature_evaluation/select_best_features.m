@@ -30,7 +30,7 @@ function bestSet = select_best_features(data, labelVar, opts)
     labelVar
     opts.NumFeatRange (1,2) double {mustBeNonnegative} = [10, inf]
     opts.RhoMax       (1,1) double  {mustBePositive, mustBeLessThan(opts.RhoMax,1)} = 0.90
-    opts.Verbose      (1,1) logical = true
+    opts.Verbose      (1,1) logical = false
     opts.Classifier   function_handle = @(X,Y) fitcknn(X,Y,'NumNeighbors',3)
     opts.CV           = cvpartition(height(data),'KFold',5)
     opts.Importanza   (1,1) string {mustBeMember(opts.Importanza,["mrmrRank","oobPermuted"])} = "mrmrRank"
@@ -148,6 +148,3 @@ function keptIdx = pruneCorrelatedByMRMR(X, idx, score, rhoThr)
   end
   keptIdx = idx(keep);
 end
-
-
-
