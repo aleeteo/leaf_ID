@@ -28,6 +28,7 @@ function [pred, acc, cm] = classify_multiple(img, mask, classifier, detector, sc
     options.labels (:,:) = []
     options.standardize (1,1) logical = true
     options.DoParallel (1,1) logical = false
+    options.Visualize (1,1) logical = false
   end
 
   standardize = options.standardize;
@@ -83,7 +84,20 @@ function [pred, acc, cm] = classify_multiple(img, mask, classifier, detector, sc
 
     acc = mean(true_valid == pred_valid);
     cm  = confusionmat(true_valid, pred_valid);
-  end
+    if options.Visualize
+      figure;
+      subplot(1, 2, 1), imagesc(pred), title('Predizione'), axis image, axis off;
+      subplot(1, 2, 2), imagesc(options.labels), title('Ground Truth'), axis image, axis off;
+
+      D = pred ~= options.labels;
+      % Visualizzazione con imagesc
+      figure;
+      imagesc(D);
+      colormap(gray);
+      colorbar;
+      title('differenza tra predizione e ground truth');
+    end
+  end 
 end
 
 function label = classify_object(img, item_mask, classifier, detector, class_names, rec_names, scaling_data, standardize)
