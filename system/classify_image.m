@@ -9,7 +9,7 @@ function [pred, acc, cm] = classify_image(img, classifier, detector, scaling_dat
     options.Visualize (1,1) logical = false
   end
   
-  mask = segmentation5(img);
+  mask = segment(img);
   [pred, acc, cm] = classify_multiple(img, mask, classifier, detector, scaling_data, ...
                     labels=gt, standardize=true, DoParallel=false, Visualize=options.Visualize);
 end

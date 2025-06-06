@@ -1,4 +1,4 @@
-function mask = segmentation5(img, threshold)
+function mask = segment(img, threshold)
     arguments    
       img(:,:,:)
       threshold(1,1) {mustBeNumeric}=21

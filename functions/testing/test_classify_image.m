@@ -23,7 +23,7 @@ function results = test_classify_image(classifier, detector, scaling_data, optio
 
   for i = 1:numImgs
     img = imread(images{i});
-    mask = segmentation5(img);
+    mask = segment(img);
     label = load(labels{i}).labeledImage;
 
     [pred, instanceAccuracy, cm] = classify_multiple(img, mask, classifier, detector, scaling_data, ...

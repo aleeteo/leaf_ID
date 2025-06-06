@@ -1,4 +1,4 @@
-function thresaccu_isto(images_path, masks_path)
+function tresh_accuracy_hist(images_path, masks_path)
     % Controlla che le cartelle esistano
     if ~isfolder(images_path)
         error('La cartella delle immagini non esiste.');
