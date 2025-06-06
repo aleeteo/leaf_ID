@@ -98,7 +98,7 @@ function label = classify_object(img, item_mask, classifier, detector, class_nam
 
   % Fase 1: riconoscimento unknown
   rec_features = desc(:, rec_names);
-  [rec_pred, ~] = predict(detector, rec_features);
+  rec_pred = detector.predict(rec_features);
 
   if rec_pred == 0
     label = 11;  % unknown
