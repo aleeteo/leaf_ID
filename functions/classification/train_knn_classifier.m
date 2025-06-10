@@ -16,7 +16,9 @@ function [classifier, test_accuracy, cm, f1_score] = train_knn_classifier(traini
   end
 
   bestIdx = select_best_features(training_data, "Label", ...
-                   'NumFeatRange', options.NumFeatRange);
+                   'NumFeatRange', options.NumFeatRange, ...
+                   'Importanza', 'mrmrRank', ...
+                   'Classifier', @(X, Y) fitcknn(X, Y, 'NumNeighbors', options.NumNeighbors));
   training_data = training_data(:, [1 bestIdx]);
   testing_data = testing_data(:, [1 bestIdx]);
 
