@@ -59,7 +59,7 @@ function descriptors = compute_descriptors(img, mask, label, options)
   end
 
   if ismember('texture', modules)
-    texture_table = compute_texture_descriptors(img, mask, texture_features={'rilbp' 'edgehistStats', 'zernike'});
+    texture_table = compute_texture_descriptors(img, mask, texture_features={'rilbp', 'edgehistStats', 'zernike'});
     descriptors = [descriptors, texture_table];
   end
 
