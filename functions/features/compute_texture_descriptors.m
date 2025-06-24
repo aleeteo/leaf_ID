@@ -11,17 +11,17 @@ function texture_table = compute_texture_descriptors(img, mask, options)
 %         'rilbp'  : Local Binary Pattern rotation-invariant (TODO)
 %         'edgehistStats' : statistiche sui gradienti del bordo (media, varianza, ecc.)
 %
-%     Default: {'hist', 'glcm', 'avgedge'}
+%     Default: {'hist', 'glcm', 'rilbp', 'edgehistStats', 'zernike'}
 
   arguments
     img (:,:,3) uint8
     mask (:,:) logical
-    options.texture_features cell = {'hist', 'glcm', 'rilbp' 'edgehistStats', 'zernike'}
+    options.texture_features cell = {'hist', 'glcm', 'rilbp', 'edgehistStats', 'zernike'}
   end
 
   valid_features = {'hist', 'glcm', 'rilbp', 'edgehistStats', 'zernike'};
   if ~all(ismember(options.texture_features, valid_features))
-    error('Valori non validi in options.texture_features. Ammessi: hist, glcm, rilbp, avgedge.');
+    error('Valori non validi in options.texture_features. Ammessi: hist, glcm, rilbp, edgehistStats, zernike.');
   end
 
   % Conversione in scala di grigi
